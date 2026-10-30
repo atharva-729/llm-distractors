@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confused on Purpose · can LLMs play a student with a misconception?</title>
+<!-- Reminder (owner): ask Anand for the jev key. The key itself goes in .env only, never here. -->
+<style>
+.viz-root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface-1: #ffffff; --surface-2: #f3f2ee;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
+  --grid: #e7e6df; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --none: #c3c2b7;
+  --t1: rgba(42,120,214,.14); --t2: rgba(235,104,52,.16); --t3: rgba(27,175,122,.16);
+  --hero-a: #0f2a4a; --hero-b: #13467f; --hero-ink: #ffffff; --hero-sub: #c9dcf3;
+  --tier-small: #898781; --tier-large: #52514e; --tier-think: #0b0b0b;
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232321;
+  --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --none: #52514e;
+  --t1: rgba(57,135,229,.22); --t2: rgba(217,89,38,.24); --t3: rgba(25,158,112,.24);
+  --hero-a: #0a1a2e; --hero-b: #102d52; --hero-ink: #f0efec; --hero-sub: #a9c3e3;
+  --tier-small: #898781; --tier-large: #c3c2b7; --tier-think: #f0efec;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.viz-root { background: var(--page); color: var(--text-primary); min-height: 100vh;
+  font: 16px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--s1); }
+.hero { background: linear-gradient(135deg, var(--hero-a), var(--hero-b)); color: var(--hero-ink); padding: 44px 20px 0; }
+.hero-in { max-width: 1040px; margin: 0 auto; position: relative; }
+.hero h1 { font-size: 40px; line-height: 1.15; margin: 0 0 10px; font-weight: 700; letter-spacing: -.01em; }
+.hero p { color: var(--hero-sub); font-size: 18px; max-width: 760px; margin: 0 0 26px; }
+.hero .eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: 12.5px; color: var(--hero-sub); margin-bottom: 8px; }
+.tabs { display: flex; gap: 6px; }
+.tabs button { font: inherit; font-size: 15.5px; font-weight: 600; padding: 12px 22px; border: 0; border-radius: 12px 12px 0 0; cursor: pointer;
+  background: rgba(255,255,255,.10); color: var(--hero-ink); }
+.tabs button[aria-selected="true"] { background: var(--page); color: var(--text-primary); }
+.tabs button small { display: block; font-weight: 400; font-size: 12.5px; opacity: .75; }
+.theme { position: absolute; top: -28px; right: 0; display: inline-flex; border: 1px solid rgba(255,255,255,.25); border-radius: 8px; overflow: hidden; }
+.theme button { background: transparent; color: var(--hero-ink); border: 0; padding: 4px 10px; font: inherit; font-size: 12.5px; cursor: pointer; }
+.theme button + button { border-left: 1px solid rgba(255,255,255,.25); }
+main { max-width: 1040px; margin: 0 auto; padding: 8px 20px 90px; }
+.tab { display: none; } .tab.on { display: block; }
+.chapter { margin: 54px 0 0; }
+.chapter > .label { display: inline-flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: .12em; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); }
+.chapter > .label b { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--text-primary); color: var(--page); font-size: 13px; letter-spacing: 0; }
+h2 { font-size: 27px; line-height: 1.25; margin: 10px 0 12px; font-weight: 680; letter-spacing: -.01em; }
+h3 { font-size: 18px; margin: 0 0 6px; font-weight: 650; }
+p { margin: 8px 0 14px; max-width: 800px; }
+.lead { font-size: 19px; line-height: 1.55; }
+.sub { color: var(--text-secondary); }
+.muted { color: var(--muted); }
+mark { color: inherit; padding: 1px 5px; border-radius: 4px; font-weight: 600; }
+mark.hit { background: var(--t1); box-shadow: inset 0 -2px 0 var(--s1); }
+mark.slip { background: var(--t2); box-shadow: inset 0 -2px 0 var(--s2); }
+mark.other { background: var(--t3); box-shadow: inset 0 -2px 0 var(--s3); }
+mark.plain { background: var(--surface-2); box-shadow: inset 0 -2px 0 var(--axis); }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin: 16px 0; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 14px; }
+.cond { border-left: 5px solid var(--axis); }
+.cond.hit { border-left-color: var(--s1); } .cond.slip { border-left-color: var(--s2); } .cond.other { border-left-color: var(--s3); }
+.cond .tag { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; color: var(--text-secondary); }
+.quote { font-family: ui-serif, Georgia, serif; font-size: 16.5px; font-style: italic; color: var(--text-primary); margin: 6px 0; }
+.big { font-size: 46px; font-weight: 750; line-height: 1.05; letter-spacing: -.02em; }
+.stat .k { font-size: 13.5px; color: var(--text-secondary); }
+.stat .note { font-size: 13.5px; color: var(--muted); margin-top: 4px; }
+.callout { background: var(--surface-2); border-radius: 14px; padding: 18px 22px; margin: 18px 0; border: 1px solid var(--border); }
+.callout.blue { background: var(--t1); border-color: transparent; }
+.callout.orange { background: var(--t2); border-color: transparent; }
+.callout h3 { margin-bottom: 4px; }
+.chart-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px 16px; margin: 22px 0 10px; }
+.chart-card .q { font-size: 20px; font-weight: 680; margin: 0 0 2px; }
+.chart-card .how { color: var(--text-secondary); font-size: 14.5px; margin: 0 0 10px; max-width: none; }
+.takeaway { margin: 10px 0 30px; padding: 4px 0 4px 16px; border-left: 3px solid var(--text-primary); max-width: 860px; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13.5px; color: var(--text-secondary); margin: 6px 0 8px; align-items: center; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; background: var(--surface-1); }
+.seg button { background: transparent; color: var(--text-primary); border: 0; padding: 6px 13px; font: inherit; font-size: 13.5px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--border); }
+.seg button[aria-pressed="true"] { background: var(--text-primary); color: var(--page); }
+.stickybar { position: sticky; top: 0; z-index: 6; background: color-mix(in srgb, var(--page) 92%, transparent); backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--grid); padding: 10px 0; margin-top: 26px; }
+svg text { fill: var(--text-secondary); font-size: 12.5px; font-family: inherit; }
+svg .ink { fill: var(--text-primary); }
+svg .mut { fill: var(--muted); }
+svg .tierlab { fill: var(--text-secondary); font-size: 11.5px; letter-spacing: .1em; font-weight: 700; }
+.hl-on [data-m] { transition: opacity .12s; }
+.hl-on [data-m]:not(.on) { opacity: .18; }
+#tip { position: fixed; pointer-events: none; background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border);
+  box-shadow: 0 6px 22px rgba(0,0,0,.16); border-radius: 10px; padding: 9px 12px; font-size: 13px; line-height: 1.5; max-width: 330px; display: none; z-index: 20; }
+#tip b { font-weight: 650; }
+details.deep { margin: 14px 0; }
+details.deep > summary { cursor: pointer; font-weight: 650; font-size: 16px; padding: 12px 16px; background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; list-style: none; }
+details.deep > summary::before { content: "＋ "; color: var(--muted); }
+details.deep[open] > summary::before { content: "－ "; }
+details.tbl { font-size: 13px; margin-top: 8px; } details.tbl summary { cursor: pointer; color: var(--text-secondary); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); }
+th { color: var(--text-secondary); font-weight: 600; }
+td.num, th.num { text-align: right; }
+.heat td.cell { text-align: center; border: 2px solid var(--surface-1); border-radius: 4px; font-weight: 600; }
+.models { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.models .card h3 { display: flex; align-items: center; gap: 8px; }
+.models ul { margin: 6px 0 0; padding-left: 18px; }
+.chip { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 99px; border: 1px solid var(--border); color: var(--text-secondary); }
+/* try-it widget */
+.qbox { font-size: 26px; font-weight: 650; margin: 4px 0 14px; font-variant-numeric: tabular-nums; }
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+.opt { border: 2px solid var(--border); border-radius: 12px; padding: 12px 14px; cursor: pointer; background: var(--surface-1); text-align: left; font: inherit; color: inherit; }
+.opt .v { font-size: 22px; font-weight: 650; }
+.opt .m { font-size: 13px; color: var(--text-secondary); }
+.opt.correct { cursor: default; border-style: dashed; }
+.opt[aria-pressed="true"] { border-color: var(--s1); background: var(--t1); }
+.answers { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px; margin-top: 14px; }
+.ans { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: var(--surface-2); font-size: 14px; }
+.ans > span:first-child { font-weight: 600; white-space: nowrap; }
+.ans .pick { font-weight: 700; padding: 2px 9px; border-radius: 6px; white-space: nowrap; font-size: 13px; }
+.pick.hit { background: var(--s1); color: #fff; } .pick.slip { background: var(--s2); color: #fff; } .pick.other { background: var(--s3); color: #fff; }
+.steps { margin-top: 26px; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; counter-reset: s; }
+.step { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; position: relative; }
+.step::before { counter-increment: s; content: counter(s); position: absolute; top: -12px; left: 16px; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--s1); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+.step h3 { margin-top: 6px; font-size: 16px; }
+.step p { font-size: 14.5px; margin: 4px 0 0; }
+footer { border-top: 1px solid var(--grid); margin-top: 60px; padding-top: 18px; font-size: 13.5px; color: var(--text-secondary); }
+@media (max-width: 640px) { .hero h1 { font-size: 30px; } h2 { font-size: 23px; } .big { font-size: 36px; } }
+</style>
+</head>
+<body>
+<div class="viz-root" id="root">
+<header class="hero">
+  <div class="hero-in">
+    <div class="theme" role="group" aria-label="Theme"><button data-theme-set="light">Light</button><button data-theme-set="dark">Dark</button></div>
+    <div class="eyebrow">Confused on Purpose · phase 1 results</div>
+    <h1>Can an AI play a student who gets maths wrong in one specific way?</h1>
+    <p>We put real maths questions to nine language models <b data-c="answers"></b> times, mostly asking them to answer as a student who holds one particular misconception.
+      Two stories came out of it: one about building better tests, and one about how these models handle "pretend you don't know".</p>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="t-edtech" aria-selected="true" data-tab="edtech">Edtech angle<small>Simulated students to audit test questions</small></button>
+      <button role="tab" id="t-llm" aria-selected="false" data-tab="llm">LLM study angle<small>Can a model stop knowing the answer?</small></button>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- ============================ EDTECH ============================ -->
+<section class="tab on" id="tab-edtech" role="tabpanel" aria-labelledby="t-edtech">
+
+  <div class="chapter"><span class="label"><b>1</b> The problem</span>
+    <h2>Every wrong option on a good test question is a trap with a purpose</h2>
+    <p class="lead">Take <b>1/2 + 1/3</b>. A student who adds the tops and adds the bottoms writes <mark class="hit">2/5</mark>.
+      Put 2/5 among the options, and the student who picks it has just told you exactly what they misunderstand.</p>
+    <p>That's what a well-built wrong option (a <b>distractor</b>) does: it turns a wrong answer into a diagnosis.
+      But building these traps is slow, expert work, and checking them is slower. A distractor nobody falls for is dead weight.
+      A question where confused students still find the right answer can't tell understanding apart from luck.
+      Today the only way to find out is to put the question in front of thousands of real students and wait for the data.</p>
+  </div>
+
+  <div class="chapter"><span class="label"><b>2</b> The idea</span>
+    <h2>Rehearse the question with simulated students first</h2>
+    <p>Tell a language model <span class="quote">"You are a student who believes [some misconception]"</span>, show it the question, and see which option it picks.
+      Do that for many misconceptions and you get a preview of how a classroom would answer, before a single real student sees the question.</p>
+    <p>That only works if a model can genuinely <b>hold a misconception on command</b>: make <i>that</i> specific mistake,
+      rather than quietly answering correctly or picking any old wrong answer. This first phase tests exactly that.
+      If it holds up, the second phase is an audit tool built on top of it (see <a href="#next">where this goes next</a>).</p>
+  </div>
+
+  <div class="chapter"><span class="label"><b>3</b> How we tested it</span>
+    <h2>Real questions, expert-labelled mistakes, three ways of asking</h2>
+    <p>We used the <b>Eedi</b> dataset from Kaggle's <i>Mining Misconceptions in Mathematics</i> competition:
+      <b data-c="eedi_questions"></b> real maths questions where education experts labelled each wrong option with the misconception that produces it.
+      After setting aside questions that need a picture, that leaves <b data-c="pairs"></b> question + wrong option + misconception <b>pairs</b>
+      from <b data-c="questions"></b> questions, covering <b data-c="misconceptions"></b> different misconceptions.</p>
+    <p>For every pair we asked each model the same question three ways:</p>
+    <div class="grid3">
+      <div class="card cond hit"><div class="tag">Matched persona</div>
+        <div class="quote">"You are a student who believes <u>adds the tops and the bottoms</u>…"</div>
+        <p class="sub" style="margin:4px 0 0">Success is picking the option that misconception leads to. We call that a <mark class="hit">hit</mark>.</p></div>
+      <div class="card cond"><div class="tag">Control persona</div>
+        <div class="quote">"You are a student who believes <u>the angles in a triangle add up to 360°</u>…"</div>
+        <p class="sub" style="margin:4px 0 0">Same question, unrelated belief. This tells us how tempting the option is <i>anyway</i>.</p></div>
+      <div class="card cond"><div class="tag">No persona</div>
+        <div class="quote">"Answer the question."</div>
+        <p class="sub" style="margin:4px 0 0">Can the model solve it at all? This is the knowledge it has to set aside.</p></div>
+    </div>
+    <p>Each persona was asked with two wordings: <b>student</b> ("You are a student who believes…") and <b>teacher</b>
+      ("A student believes…; predict their answer"). The options were reshuffled for every call, with the target spread evenly over A–D.
+      Every model answered with a single letter. Every call was cached and every random choice seeded, so each number here can be reproduced exactly.</p>
+
+    <div class="chart-card" id="tryit">
+      <div class="q">Try it on a question we wrote</div>
+      <p class="how">The Eedi questions can't be published, so here are two of our own, sent to all nine models with exactly the same prompts.
+        Click a wrong option to give every model that misconception, and see what each one picked.</p>
+      <div class="controls" style="margin-bottom:10px"><div class="seg" id="exQ"></div></div>
+      <div class="qbox" id="exText"></div>
+      <div class="opts" id="exOpts"></div>
+      <div id="exPersona" style="margin-top:14px"></div>
+      <div class="legend" style="margin-top:10px">
+        <span><span class="sw" style="background:var(--s1)"></span>Made the intended mistake</span>
+        <span><span class="sw" style="background:var(--s2)"></span>Answered correctly anyway</span>
+        <span><span class="sw" style="background:var(--s3)"></span>Picked a different wrong option</span>
+      </div>
+      <div class="answers" id="exAns"></div>
+    </div>
+  </div>
+
+  <div class="chapter"><span class="label"><b>4</b> Who we tested</span>
+    <h2>Nine models, from pocket-change to top of the range</h2>
+    <div class="models" id="modelCards"></div>
+    <p class="sub">To compare like with like, the charts below use the <b data-c="common_pairs"></b> pairs (from <b data-c="common_questions"></b> questions) that all nine models answered, drawn at random.
+      The five small models also ran on all <b data-c="pairs"></b> pairs; those results are in the deep dive and tell the same story.</p>
+  </div>
+
+  <div class="chapter"><span class="label"><b>5</b> What we found</span>
+    <h2>Yes, and how well depends on the model and whether it gets to think</h2>
+    <div class="stickybar controls"><span class="sub" style="font-size:14px">Prompt wording for every chart:</span><div class="seg fr-toggle"></div>
+      <span class="legend" style="margin:0">
+        <span><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="var(--tier-small)"/></svg>small</span>
+        <span><svg width="14" height="14"><rect x="1.5" y="1.5" width="11" height="11" rx="2" fill="var(--tier-large)"/></svg>large</span>
+        <span><svg width="14" height="14"><path d="M7 0.5 L13.5 7 L7 13.5 L0.5 7 Z" fill="var(--tier-think)"/></svg>large + thinking</span>
+      </span></div>
+
+    <div class="chart-card">
+      <div class="q">How often does each simulated student fall into the right trap?</div>
+      <p class="how">Hollow dot: how often the option gets picked by a student with an <i>unrelated</i> belief. Filled dot: with the <i>matching</i> belief.
+        The bar behind the filled dot is the 95% range. The gap between the dots is the persona doing its job. Hover any row.</p>
+      <div id="eG1"></div>
+    </div>
+    <p class="takeaway" id="eT1"></p>
+
+    <div class="chart-card">
+      <div class="q">Is the simulated student confused only where it should be?</div>
+      <p class="how">A useful fake student makes its mistake when the misconception applies, <b>and</b> still gets the question right when it doesn't.
+        Up: picks the matching trap. Right: answers correctly when its misconception is unrelated. The arrow is GPT-5.4 with its thinking switched on.</p>
+      <div id="eG2"></div>
+    </div>
+    <p class="takeaway" id="eT2"></p>
+
+    <div class="chart-card">
+      <div class="q">What does a good simulated student cost?</div>
+      <p class="how">The cost to audit 1,000 questions with a panel of <span data-c="panel"></span> personas each, at each model's measured price per call (log scale), against how often it hits the matching trap.</p>
+      <div id="eG3"></div>
+    </div>
+    <p class="takeaway" id="eT3"></p>
+
+    <details class="deep"><summary>Deep dive: the same results in more detail</summary>
+      <div class="chart-card">
+        <div class="q">Does the 250-pair subset match the full run?</div>
+        <p class="how">Lift (matched minus control hit rate) with its 95% range, for the five small models on the shared 250 pairs (hollow) and on all <span data-c="pairs"></span> pairs (filled).</p>
+        <div id="eD1"></div>
+      </div>
+      <div class="chart-card">
+        <div class="q">Does it work across maths topics?</div>
+        <p class="how">Lift by topic for the five small models on all <span data-c="pairs"></span> pairs, for the ten largest topics. Darker blue means a stronger effect. Hover for hit rates.</p>
+        <div id="eD2" style="overflow-x:auto"></div>
+      </div>
+      <div class="chart-card">
+        <div class="q">Is a misconception reliable from one question to the next?</div>
+        <p class="how">For misconceptions tagged on 3+ questions: on what share of their questions does the persona hit? A tool needs most misconceptions on the right-hand side. Small models, full run.</p>
+        <div class="grid3" id="eD3"></div>
+      </div>
+      <div class="chart-card">
+        <div class="q">Every number on this tab</div>
+        <p class="how">Shared <span data-c="common_pairs"></span> pairs, current wording. Ranges are 95% bootstrap intervals over pairs.</p>
+        <div id="eD4" style="overflow-x:auto"></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="chapter" id="next"><span class="label"><b>6</b> Where this goes next</span>
+    <h2>From "can it?" to a tool that checks questions before students see them</h2>
+    <p>Phase 1 says a well-chosen model can hold a misconception reliably enough to be useful. Phase 2 turns that into an audit tool for any multiple-choice maths question:</p>
+    <div class="steps">
+      <div class="step"><h3>Pick the panel</h3><p>Find the <span data-c="panel"></span> misconceptions most relevant to the question, from Eedi's catalogue of <span data-c="catalogue"></span>.</p></div>
+      <div class="step"><h3>Run the panel</h3><p>Each persona answers using the setup that won phase 1: a thinking model with the student wording.</p></div>
+      <div class="step"><h3>Write the report card</h3><p><mark class="plain">Dead distractor</mark>: no persona picks it. <mark class="slip">Leaky key</mark>: confused personas still find the right answer.
+        <mark class="hit">Gap</mark>: a common misconception with no option to catch it, plus a suggested replacement option.</p></div>
+      <div class="step"><h3>Prove it works</h3><p>On 100 held-out questions, swap a real distractor for a junk one and check the tool flags it.</p></div>
+    </div>
+    <div class="grid2" style="margin-top:18px">
+      <div class="callout blue"><h3>Who would use it</h3>
+        <p style="margin:0"><b>Assessment publishers</b> QA-ing a whole item bank overnight instead of waiting for field-test data.
+        <b>Question writers</b> getting distractors aimed at specific misconceptions as they draft.
+        <b>Learning platforms</b> turning each wrong answer into "this student probably believes X" and serving the right follow-up.</p></div>
+      <div class="callout"><h3>What we'd still need</h3>
+        <p style="margin:0">A check against <b>real student answer rates</b>: the models reproduce the expert-labelled mistake, but we don't yet know whether they're as tempted as real children are.
+        Also a <b>licensing</b> answer: Eedi's data is non-commercial, so a product would need permission or its own question bank.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ LLM STUDY ============================ -->
+<section class="tab" id="tab-llm" role="tabpanel" aria-labelledby="t-llm">
+
+  <div class="chapter"><span class="label"><b>1</b> The question</span>
+    <h2>Can a model un-know something on request?</h2>
+    <p class="lead">Ask a model that's good at maths to answer as a student who believes 1/2 + 1/3 = 2/5. It knows the answer is 5/6.
+      Can it set that aside and be wrong in exactly the way it was told, or does what it knows keep leaking through?</p>
+    <p>Whenever a "confused" model misses the intended mistake, the answer lands in one of two places, and they mean very different things:</p>
+    <div class="grid3">
+      <div class="card cond hit"><div class="tag">Success</div><h3><mark class="hit">The intended mistake</mark></h3>
+        <p class="sub" style="margin:0">It picked exactly the option the misconception leads to.</p></div>
+      <div class="card cond slip"><div class="tag">Failure 1: knowledge leak</div><h3><mark class="slip">The correct answer</mark></h3>
+        <p class="sub" style="margin:0">It couldn't let go of what it knows and answered correctly anyway.</p></div>
+      <div class="card cond other"><div class="tag">Failure 2: wrong mistake</div><h3><mark class="other">A different wrong option</mark></h3>
+        <p class="sub" style="margin:0">It did let go of the right answer, but couldn't follow the faulty rule to the right wrong answer.</p></div>
+    </div>
+  </div>
+
+  <div class="chapter"><span class="label"><b>2</b> How we looked at it</span>
+    <h2>Same experiment, a different lens</h2>
+    <p>The data is the experiment described on the <a href="#edtech" data-goto="edtech">edtech tab</a>: real Eedi maths questions, each wrong option labelled with its misconception,
+      and every model asked with a matching persona, an unrelated (control) persona, and no persona at all.
+      Here we look at <b>where each answer lands</b>, not just whether it hit, and at what happens when the misconception doesn't apply to the question at all.</p>
+    <p>One comparison matters most: <b>GPT-5.4 with thinking off and on</b>. It's the same model with the same prompt word for word, and only one setting changes:
+      whether it's allowed to reason privately before answering. Its answer is still a single letter, and we never see the reasoning, only how long it was (about 100 tokens on average).</p>
+  </div>
+
+  <div class="chapter"><span class="label"><b>3</b> What we found</span>
+    <h2>Knowledge leaks out of weak models; strong models stumble on the mistake itself</h2>
+    <div class="stickybar controls"><span class="sub" style="font-size:14px">Prompt wording for every chart:</span><div class="seg fr-toggle"></div>
+      <span class="legend" style="margin:0">
+        <span><span class="sw" style="background:var(--s1)"></span>intended mistake</span>
+        <span><span class="sw" style="background:var(--s2)"></span>correct answer</span>
+        <span><span class="sw" style="background:var(--s3)"></span>a different wrong option</span>
+      </span></div>
+
+    <div class="chart-card">
+      <div class="q">When a model plays a confused student, where does its answer land?</div>
+      <p class="how">Matched-persona answers on the shared <span data-c="common_pairs"></span> pairs. On the right is how often the same model gets these questions right with no persona: the knowledge it was asked to set aside.</p>
+      <div id="lG1"></div>
+    </div>
+    <p class="takeaway" id="lT1"></p>
+
+    <div class="chart-card">
+      <div class="q">Flip one switch: what does thinking change?</div>
+      <p class="how">The same GPT-5.4 answers to the same items, thinking off (left) and on (right), both wordings combined. Each ribbon is a group of answers moving from one outcome to another. Hover a ribbon.</p>
+      <div class="grid2" style="gap:24px"><div><h3 style="font-size:15px">With the matching misconception</h3><div id="lG2a"></div></div>
+        <div><h3 style="font-size:15px">With an unrelated misconception</h3><div id="lG2b"></div></div></div>
+    </div>
+    <p class="takeaway" id="lT2"></p>
+
+    <div class="chart-card">
+      <div class="q">Confused only where told, or confused everywhere?</div>
+      <p class="how">Gray: right answers with no persona. Orange: right answers as a student whose misconception has <i>nothing to do</i> with the question.
+        Ideally the two dots sit together: an unrelated misconception shouldn't make you worse at this question.</p>
+      <div id="lG3"></div>
+    </div>
+    <p class="takeaway" id="lT3"></p>
+
+    <div class="callout orange">
+      <h3>A side note on reading instructions literally</h3>
+      <p style="margin:0">We tried switching on thinking for Claude Sonnet 4.6 too. It did think, but its entire thinking was the answer letter: <b>7 tokens</b>, every time.
+        Our prompt ends with "Reply with one letter only", and Claude applied that to its private reasoning as well. GPT-5.4 read the same words as a rule about the final answer, and thought for about 100 tokens first.
+        <b>How much a model thinks depends on how it reads the instructions, not just on whether thinking is switched on.</b></p>
+    </div>
+
+    <details class="deep"><summary>Deep dive: the same results in more detail</summary>
+      <div class="chart-card">
+        <div class="q">How strong is the pull of the right answer?</div>
+        <p class="how">Of the misses only: what share went to the correct answer? There are three non-target options, so with no pull at all you'd expect about 1 in 3 (dashed line).</p>
+        <div id="lD1"></div>
+      </div>
+      <div class="chart-card">
+        <div class="q">Which mistakes are easy to fake?</div>
+        <p class="how">All models pooled, grouped by how often <i>control</i> personas picked the same option. On the left are options nobody falls for by accident.</p>
+        <div id="lD2"></div>
+      </div>
+      <div class="chart-card">
+        <div class="q">Do models agree on which mistakes they can make?</div>
+        <p class="how">Each shared pair got <span id="tries"></span> matched tries (9 models × 2 wordings). How many pairs got the intended mistake (blue) or the correct answer (orange) <i>k</i> times?</p>
+        <div id="lD3"></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="chapter"><span class="label"><b>4</b> What it suggests</span>
+    <h2>Pretending needs room to think, and clear instructions about where to stop pretending</h2>
+    <div class="grid2">
+      <div class="callout blue"><h3>What we can say</h3>
+        <ul style="margin:6px 0 0; padding-left:18px">
+          <li>Models <b>can</b> set what they know aside: with a matching persona, right answers collapse.</li>
+          <li>The leak is a small-model problem. Strong models fail by making the <i>wrong</i> mistake.</li>
+          <li>Private reasoning is the biggest single lever: it moves answers into the intended mistake and out of everywhere else.</li>
+          <li>"Imagine a confused student" can turn into "be confused about everything", especially with the teacher wording.</li>
+        </ul></div>
+      <div class="callout"><h3>What we'd test next</h3>
+        <ul style="margin:6px 0 0; padding-left:18px">
+          <li><b>Visible working:</b> let the persona write out its (wrong) working. Does it compute the right answer first and then steer away?</li>
+          <li><b>Prompt wording:</b> does dropping "one letter only" let Claude think, and does that close its gap?</li>
+          <li><b>Real students:</b> are the mistakes models find easy to fake also the ones children make most?</li>
+        </ul></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p><b>Method in one paragraph.</b> Eedi "Mining Misconceptions in Mathematics" (Kaggle, CC BY-NC 4.0). Only aggregate results are shown here; the example questions on this page are our own.
+    Each pair is asked with a matched persona, an unrelated (control) persona, and no persona, in two wordings. Option order is shuffled for every call, with the target's position balanced, and matched and control calls share the same layout.
+    Answers are constrained to one letter. Temperature is 0 where the model allows it. Intervals are 95% bootstrap ranges over pairs.
+    Main charts use the <span data-c="common_pairs"></span> pairs all nine models answered; the five small models also ran on all <span data-c="pairs"></span>.
+    LLM personas are not real students, and nothing here is yet checked against real student answer rates.</p>
+  <p>Code, config and per-call results: <a href="https://github.com/atharva-729/llm-distractors">github.com/atharva-729/llm-distractors</a></p>
+</footer>
+</main>
+<div id="tip"></div>
+</div>
+
+<script>
+const D = {"counts": {"answers": 67883, "eedi_questions": 1869, "pairs": 2734, "questions": 1179, "misconceptions": 1054, "catalogue": 2587, "common_pairs": 250, "common_questions": 229, "panel": 25}, "models": [{"key": "gpt-4o-mini", "name": "GPT-4o mini", "tier": "small", "cost_call": 2.9422889650110105e-05, "cost_1000q": 0.7355722412527527, "student": {"n": 250, "hit_m": 0.344, "hit_c": 0.124, "lift": 0.21999999999999997, "slip_m": 0.412, "other_m": 0.244, "inv_m": 0.0, "correct_c": 0.636, "other_c": 0.24, "misses": 164, "truth_share": 0.6280487804878049, "ci_hit_m": [0.2879, 0.4], "ci_hit_c": [0.084, 0.168], "ci_lift": [0.1639, 0.28], "ci_correct_c": [0.572, 0.6960999999999994], "ci_slip_m": [0.352, 0.472]}, "teacher": {"n": 250, "hit_m": 0.28, "hit_c": 0.132, "lift": 0.14800000000000002, "slip_m": 0.42, "other_m": 0.3, "inv_m": 0.0, "correct_c": 0.652, "other_c": 0.216, "misses": 180, "truth_share": 0.5833333333333334, "ci_hit_m": [0.228, 0.34], "ci_hit_c": [0.088, 0.176], "ci_lift": [0.09200000000000003, 0.20400000000000001], "ci_correct_c": [0.592, 0.712], "ci_slip_m": [0.36, 0.48]}, "alone": 0.6506550218340611, "ci_alone": [0.5895196506550219, 0.7074235807860262]}, {"key": "gemini-2.5-flash-lite", "name": "Gemini 2.5 Flash-Lite", "tier": "small", "cost_call": 1.682313025038741e-05, "cost_1000q": 0.4205782562596852, "student": {"n": 250, "hit_m": 0.26, "hit_c": 0.068, "lift": 0.192, "slip_m": 0.496, "other_m": 0.184, "inv_m": 0.06, "correct_c": 0.764, "other_c": 0.132, "misses": 170, "truth_share": 0.7294117647058823, "ci_hit_m": [0.208, 0.316], "ci_hit_c": [0.036, 0.1], "ci_lift": [0.136, 0.256], "ci_correct_c": [0.712, 0.816], "ci_slip_m": [0.436, 0.56]}, "teacher": {"n": 250, "hit_m": 0.168, "hit_c": 0.064, "lift": 0.10400000000000001, "slip_m": 0.644, "other_m": 0.176, "inv_m": 0.012, "correct_c": 0.8, "other_c": 0.136, "misses": 205, "truth_share": 0.7853658536585366, "ci_hit_m": [0.12, 0.212], "ci_hit_c": [0.036, 0.096], "ci_lift": [0.05600000000000001, 0.152], "ci_correct_c": [0.752, 0.848], "ci_slip_m": [0.584, 0.704]}, "alone": 0.7816593886462883, "ci_alone": [0.7248908296943232, 0.834061135371179]}, {"key": "gpt-5-mini", "name": "GPT-5 mini", "tier": "small", "cost_call": 7.778880189217845e-05, "cost_1000q": 1.9447200473044615, "student": {"n": 250, "hit_m": 0.392, "hit_c": 0.108, "lift": 0.28400000000000003, "slip_m": 0.296, "other_m": 0.312, "inv_m": 0.0, "correct_c": 0.54, "other_c": 0.352, "misses": 152, "truth_share": 0.4868421052631579, "ci_hit_m": [0.328, 0.452], "ci_hit_c": [0.072, 0.148], "ci_lift": [0.21589999999999998, 0.35209999999999947], "ci_correct_c": [0.48, 0.6], "ci_slip_m": [0.24, 0.356]}, "teacher": {"n": 250, "hit_m": 0.44, "hit_c": 0.216, "lift": 0.224, "slip_m": 0.172, "other_m": 0.388, "inv_m": 0.0, "correct_c": 0.336, "other_c": 0.448, "misses": 140, "truth_share": 0.30714285714285716, "ci_hit_m": [0.376, 0.5], "ci_hit_c": [0.168, 0.268], "ci_lift": [0.15200000000000002, 0.29600000000000004], "ci_correct_c": [0.28, 0.396], "ci_slip_m": [0.128, 0.22]}, "alone": 0.759825327510917, "ci_alone": [0.6986899563318777, 0.8165938864628821]}, {"key": "gpt-4.1-mini", "name": "GPT-4.1 mini", "tier": "small", "cost_call": 7.846103906696029e-05, "cost_1000q": 1.9615259766740072, "student": {"n": 250, "hit_m": 0.464, "hit_c": 0.124, "lift": 0.34, "slip_m": 0.204, "other_m": 0.332, "inv_m": 0.0, "correct_c": 0.564, "other_c": 0.312, "misses": 134, "truth_share": 0.3805970149253731, "ci_hit_m": [0.404, 0.524], "ci_hit_c": [0.084, 0.164], "ci_lift": [0.268, 0.40800000000000003], "ci_correct_c": [0.504, 0.624], "ci_slip_m": [0.156, 0.256]}, "teacher": {"n": 250, "hit_m": 0.456, "hit_c": 0.176, "lift": 0.28, "slip_m": 0.16, "other_m": 0.384, "inv_m": 0.0, "correct_c": 0.356, "other_c": 0.468, "misses": 136, "truth_share": 0.29411764705882354, "ci_hit_m": [0.396, 0.516], "ci_hit_c": [0.128, 0.224], "ci_lift": [0.21599999999999997, 0.348], "ci_correct_c": [0.3, 0.4120999999999994], "ci_slip_m": [0.116, 0.208]}, "alone": 0.8078602620087336, "ci_alone": [0.7554585152838428, 0.8558951965065502]}, {"key": "claude-haiku-4-5", "name": "Claude Haiku 4.5", "tier": "small", "cost_call": 0.0003747445559089797, "cost_1000q": 9.368613897724494, "student": {"n": 250, "hit_m": 0.476, "hit_c": 0.036, "lift": 0.44, "slip_m": 0.236, "other_m": 0.288, "inv_m": 0.0, "correct_c": 0.796, "other_c": 0.168, "misses": 131, "truth_share": 0.45038167938931295, "ci_hit_m": [0.412, 0.54], "ci_hit_c": [0.016, 0.06], "ci_lift": [0.38, 0.504], "ci_correct_c": [0.744, 0.844], "ci_slip_m": [0.188, 0.288]}, "teacher": {"n": 250, "hit_m": 0.508, "hit_c": 0.068, "lift": 0.44, "slip_m": 0.176, "other_m": 0.316, "inv_m": 0.0, "correct_c": 0.696, "other_c": 0.236, "misses": 123, "truth_share": 0.35772357723577236, "ci_hit_m": [0.444, 0.572], "ci_hit_c": [0.04, 0.1], "ci_lift": [0.376, 0.5040999999999994], "ci_correct_c": [0.636, 0.752], "ci_slip_m": [0.128, 0.228]}, "alone": 0.8995633187772926, "ci_alone": [0.8602620087336245, 0.9388646288209607]}, {"key": "gpt-5.4", "name": "GPT-5.4", "tier": "large", "cost_call": 0.0005962695152013147, "cost_1000q": 14.90673788003287, "student": {"n": 250, "hit_m": 0.544, "hit_c": 0.052, "lift": 0.49200000000000005, "slip_m": 0.152, "other_m": 0.304, "inv_m": 0.0, "correct_c": 0.8, "other_c": 0.148, "misses": 114, "truth_share": 0.3333333333333333, "ci_hit_m": [0.484, 0.604], "ci_hit_c": [0.027900000000000005, 0.08], "ci_lift": [0.428, 0.5599999999999999], "ci_correct_c": [0.748, 0.848], "ci_slip_m": [0.112, 0.2]}, "teacher": {"n": 250, "hit_m": 0.6, "hit_c": 0.192, "lift": 0.408, "slip_m": 0.068, "other_m": 0.332, "inv_m": 0.0, "correct_c": 0.372, "other_c": 0.436, "misses": 100, "truth_share": 0.17, "ci_hit_m": [0.54, 0.66], "ci_hit_c": [0.148, 0.244], "ci_lift": [0.33599999999999997, 0.48], "ci_correct_c": [0.312, 0.432], "ci_slip_m": [0.04, 0.1]}, "alone": 0.8995633187772926, "ci_alone": [0.8602620087336245, 0.9344978165938864]}, {"key": "claude-sonnet-4-6", "name": "Claude Sonnet 4.6", "tier": "large", "cost_call": 0.0011124022185702547, "cost_1000q": 27.81005546425637, "student": {"n": 250, "hit_m": 0.568, "hit_c": 0.036, "lift": 0.5319999999999999, "slip_m": 0.212, "other_m": 0.22, "inv_m": 0.0, "correct_c": 0.872, "other_c": 0.092, "misses": 108, "truth_share": 0.49074074074074076, "ci_hit_m": [0.508, 0.628], "ci_hit_c": [0.016, 0.06], "ci_lift": [0.468, 0.596], "ci_correct_c": [0.828, 0.916], "ci_slip_m": [0.16, 0.264]}, "teacher": {"n": 250, "hit_m": 0.6, "hit_c": 0.1, "lift": 0.5, "slip_m": 0.176, "other_m": 0.224, "inv_m": 0.0, "correct_c": 0.728, "other_c": 0.172, "misses": 100, "truth_share": 0.44, "ci_hit_m": [0.536, 0.66], "ci_hit_c": [0.064, 0.136], "ci_lift": [0.43189999999999995, 0.5640000000000001], "ci_correct_c": [0.672, 0.784], "ci_slip_m": [0.128, 0.224]}, "alone": 0.9475982532751092, "ci_alone": [0.9170305676855895, 0.9737991266375546]}, {"key": "gpt-5.4-think", "name": "GPT-5.4 + thinking", "tier": "thinking", "cost_call": 0.002308235056542811, "cost_1000q": 57.70587641357027, "student": {"n": 250, "hit_m": 0.68, "hit_c": 0.024, "lift": 0.656, "slip_m": 0.108, "other_m": 0.212, "inv_m": 0.0, "correct_c": 0.928, "other_c": 0.048, "misses": 80, "truth_share": 0.3375, "ci_hit_m": [0.624, 0.736], "ci_hit_c": [0.008, 0.044], "ci_lift": [0.596, 0.716], "ci_correct_c": [0.8959, 0.956], "ci_slip_m": [0.072, 0.148]}, "teacher": {"n": 250, "hit_m": 0.764, "hit_c": 0.136, "lift": 0.628, "slip_m": 0.024, "other_m": 0.212, "inv_m": 0.0, "correct_c": 0.632, "other_c": 0.232, "misses": 59, "truth_share": 0.1016949152542373, "ci_hit_m": [0.712, 0.816], "ci_hit_c": [0.092, 0.18], "ci_lift": [0.564, 0.692], "ci_correct_c": [0.572, 0.688], "ci_slip_m": [0.008, 0.044]}, "alone": 0.9694323144104804, "ci_alone": [0.9432314410480349, 0.9868995633187773]}, {"key": "gemini-3.1-pro", "name": "Gemini 3.1 Pro", "tier": "thinking", "cost_call": 0.0032638384491114705, "cost_1000q": 81.59596122778676, "student": {"n": 250, "hit_m": 0.744, "hit_c": 0.032, "lift": 0.712, "slip_m": 0.064, "other_m": 0.192, "inv_m": 0.0, "correct_c": 0.916, "other_c": 0.052, "misses": 64, "truth_share": 0.25, "ci_hit_m": [0.688, 0.796], "ci_hit_c": [0.012, 0.056], "ci_lift": [0.6559999999999999, 0.764], "ci_correct_c": [0.88, 0.948], "ci_slip_m": [0.036, 0.096]}, "teacher": {"n": 250, "hit_m": 0.776, "hit_c": 0.216, "lift": 0.56, "slip_m": 0.016, "other_m": 0.208, "inv_m": 0.0, "correct_c": 0.472, "other_c": 0.312, "misses": 56, "truth_share": 0.07142857142857142, "ci_hit_m": [0.724, 0.824], "ci_hit_c": [0.168, 0.268], "ci_lift": [0.492, 0.6280000000000001], "ci_correct_c": [0.408, 0.532], "ci_slip_m": [0.004, 0.032]}, "alone": 0.9912663755458515, "ci_alone": [0.9781659388646288, 1.0]}], "flows": {"matched": [{"from": "hit", "to": "hit", "n": 263}, {"from": "hit", "to": "slip", "n": 4}, {"from": "hit", "to": "wrong_stupid", "n": 19}, {"from": "slip", "to": "hit", "n": 27}, {"from": "slip", "to": "slip", "n": 18}, {"from": "slip", "to": "wrong_stupid", "n": 10}, {"from": "wrong_stupid", "to": "hit", "n": 71}, {"from": "wrong_stupid", "to": "slip", "n": 11}, {"from": "wrong_stupid", "to": "wrong_stupid", "n": 77}], "mismatched": [{"from": "hit", "to": "hit", "n": 14}, {"from": "hit", "to": "slip", "n": 40}, {"from": "hit", "to": "wrong_stupid", "n": 7}, {"from": "slip", "to": "hit", "n": 12}, {"from": "slip", "to": "slip", "n": 267}, {"from": "slip", "to": "wrong_stupid", "n": 14}, {"from": "wrong_stupid", "to": "hit", "n": 14}, {"from": "wrong_stupid", "to": "slip", "n": 83}, {"from": "wrong_stupid", "to": "wrong_stupid", "n": 49}]}, "natural": [{"bin": "never", "pairs": 95, "n": 1710, "hit": 0.4567251461988304, "slip": 0.2134502923976608}, {"bin": "1–10%", "pairs": 52, "n": 936, "hit": 0.4358974358974359, "slip": 0.2799145299145299}, {"bin": "11–30%", "pairs": 85, "n": 1530, "hit": 0.5699346405228758, "slip": 0.21437908496732025}, {"bin": "over 30%", "pairs": 18, "n": 324, "hit": 0.6327160493827161, "slip": 0.16666666666666666}], "agreement": {"tries": 18, "hist": [{"k": 0, "hits": 15, "slips": 34}, {"k": 1, "hits": 12, "slips": 27}, {"k": 2, "hits": 9, "slips": 41}, {"k": 3, "hits": 8, "slips": 26}, {"k": 4, "hits": 17, "slips": 26}, {"k": 5, "hits": 13, "slips": 33}, {"k": 6, "hits": 10, "slips": 16}, {"k": 7, "hits": 16, "slips": 14}, {"k": 8, "hits": 15, "slips": 9}, {"k": 9, "hits": 13, "slips": 3}, {"k": 10, "hits": 19, "slips": 6}, {"k": 11, "hits": 17, "slips": 1}, {"k": 12, "hits": 9, "slips": 3}, {"k": 13, "hits": 14, "slips": 4}, {"k": 14, "hits": 13, "slips": 4}, {"k": 15, "hits": 12, "slips": 3}, {"k": 16, "hits": 14, "slips": 0}, {"k": 17, "hits": 15, "slips": 0}, {"k": 18, "hits": 9, "slips": 0}]}, "full": {"gpt-4o-mini": {"student": {"n": 2734, "hit_m": 0.29078273591806875, "hit_c": 0.11704462326261887, "lift": 0.17373811265544986, "ci_lift": [0.15763533284564737, 0.18983174835406]}, "teacher": {"n": 2734, "hit_m": 0.2794440380395026, "hit_c": 0.1188734455010973, "lift": 0.16057059253840528, "ci_lift": [0.1437362838332114, 0.17666422823701536]}}, "gemini-2.5-flash-lite": {"student": {"n": 2734, "hit_m": 0.24579370885149962, "hit_c": 0.07022677395757132, "lift": 0.1755669348939283, "ci_lift": [0.1594641550841258, 0.1938551572787125]}, "teacher": {"n": 2734, "hit_m": 0.18763716166788588, "hit_c": 0.07351865398683248, "lift": 0.1141185076810534, "ci_lift": [0.09802487198244332, 0.12838332114118506]}}, "gpt-5-mini": {"student": {"n": 2734, "hit_m": 0.3997805413313826, "hit_c": 0.1547183613752743, "lift": 0.24506217995610827, "ci_lift": [0.22383869787856617, 0.26591075347476223]}, "teacher": {"n": 2734, "hit_m": 0.4597659107534748, "hit_c": 0.2282370153621068, "lift": 0.23152889539136798, "ci_lift": [0.21068032187271396, 0.2538496708119971]}}, "gpt-4.1-mini": {"student": {"n": 2734, "hit_m": 0.4656181419166057, "hit_c": 0.15618141916605707, "lift": 0.3094367227505487, "ci_lift": [0.28895391367959034, 0.33029444038039507]}, "teacher": {"n": 2734, "hit_m": 0.47659107534747625, "hit_c": 0.21653255303584493, "lift": 0.2600585223116313, "ci_lift": [0.23701536210680324, 0.2794440380395026]}}, "claude-haiku-4-5": {"student": {"n": 2734, "hit_m": 0.4839063643013899, "hit_c": 0.061448427212874905, "lift": 0.422457937088515, "ci_lift": [0.4023408924652524, 0.44221836137527437]}, "teacher": {"n": 2734, "hit_m": 0.5215801024140454, "hit_c": 0.08851499634235552, "lift": 0.4330651060716899, "ci_lift": [0.41075347476225316, 0.4535662033650329]}}}, "subjects": {"subjects": [{"name": "Linear Equations", "n": 84}, {"name": "BIDMAS", "n": 84}, {"name": "Multiplying and Dividing with Decimals", "n": 81}, {"name": "Place Value", "n": 72}, {"name": "Writing Expressions", "n": 72}, {"name": "Adding and Subtracting Fractions", "n": 65}, {"name": "Quadratic Equations", "n": 62}, {"name": "Time", "n": 61}, {"name": "Averages (mean, median, mode) from a List of Data", "n": 58}, {"name": "Substitution into Formula", "n": 58}], "cells": [{"model": "claude-haiku-4-5", "framing": "student", "subject": "Adding and Subtracting Fractions", "lift": 0.4, "hit": 0.49230769230769234, "n": 65}, {"model": "claude-haiku-4-5", "framing": "student", "subject": "Averages (mean, median, mode) from a List of Data", "lift": 0.4482758620689655, "hit": 0.5689655172413793, "n": 58}, {"model": "claude-haiku-4-5", "framing": "student", "subject": "BIDMAS", "lift": 0.34523809523809523, "hit": 0.4166666666666667, "n": 84}, {"model": "claude-haiku-4-5", "framing": "student", "subject": "Linear Equations", "lift": 0.1904761904761905, "hit": 0.30952380952380953, "n": 84}, {"model": "claude-haiku-4-5", "framing": "student", "subject": "Multiplying and Dividing with Decimals", "lift": 0.5432098765432098, "hit": 0.5432098765432098, "n": 81}, {"model": "claude-haiku-4-5", "framing": "student", "subject": "Place Value", "lift": 0.48611111111111116, "hit": 0.5555555555555556, "n": 72}, {"model": "claude-haiku-4-5", "framing": "student", "subject": "Quadratic Equations", "lift": 0.2258064516129032, "hit": 0.27419354838709675, "n": 62}, {"model": "claude-haiku-4-5", "framing": "student", "subject": "Substitution into Formula", "lift": 0.396551724137931, "hit": 0.43103448275862066, "n": 58}, {"model": "claude-haiku-4-5", "framing": "student", "subject": "Time", "lift": 0.5901639344262295, "hit": 0.639344262295082, "n": 61}, {"model": "claude-haiku-4-5", "framing": "student", "subject": "Writing Expressions", "lift": 0.5833333333333334, "hit": 0.625, "n": 72}, {"model": "claude-haiku-4-5", "framing": "teacher", "subject": "Adding and Subtracting Fractions", "lift": 0.4615384615384615, "hit": 0.5384615384615384, "n": 65}, {"model": "claude-haiku-4-5", "framing": "teacher", "subject": "Averages (mean, median, mode) from a List of Data", "lift": 0.5, "hit": 0.6206896551724138, "n": 58}, {"model": "claude-haiku-4-5", "framing": "teacher", "subject": "BIDMAS", "lift": 0.29761904761904756, "hit": 0.42857142857142855, "n": 84}, {"model": "claude-haiku-4-5", "framing": "teacher", "subject": "Linear Equations", "lift": 0.2857142857142857, "hit": 0.35714285714285715, "n": 84}, {"model": "claude-haiku-4-5", "framing": "teacher", "subject": "Multiplying and Dividing with Decimals", "lift": 0.5061728395061729, "hit": 0.5308641975308642, "n": 81}, {"model": "claude-haiku-4-5", "framing": "teacher", "subject": "Place Value", "lift": 0.38888888888888884, "hit": 0.5138888888888888, "n": 72}, {"model": "claude-haiku-4-5", "framing": "teacher", "subject": "Quadratic Equations", "lift": 0.467741935483871, "hit": 0.5, "n": 62}, {"model": "claude-haiku-4-5", "framing": "teacher", "subject": "Substitution into Formula", "lift": 0.43103448275862066, "hit": 0.5344827586206896, "n": 58}, {"model": "claude-haiku-4-5", "framing": "teacher", "subject": "Time", "lift": 0.5573770491803278, "hit": 0.6065573770491803, "n": 61}, {"model": "claude-haiku-4-5", "framing": "teacher", "subject": "Writing Expressions", "lift": 0.6527777777777778, "hit": 0.7222222222222222, "n": 72}, {"model": "gemini-2.5-flash-lite", "framing": "student", "subject": "Adding and Subtracting Fractions", "lift": 0.24615384615384617, "hit": 0.3384615384615385, "n": 65}, {"model": "gemini-2.5-flash-lite", "framing": "student", "subject": "Averages (mean, median, mode) from a List of Data", "lift": 0.22413793103448273, "hit": 0.43103448275862066, "n": 58}, {"model": "gemini-2.5-flash-lite", "framing": "student", "subject": "BIDMAS", "lift": 0.08333333333333334, "hit": 0.20238095238095238, "n": 84}, {"model": "gemini-2.5-flash-lite", "framing": "student", "subject": "Linear Equations", "lift": 0.04761904761904763, "hit": 0.13095238095238096, "n": 84}, {"model": "gemini-2.5-flash-lite", "framing": "student", "subject": "Multiplying and Dividing with Decimals", "lift": 0.09876543209876543, "hit": 0.16049382716049382, "n": 81}, {"model": "gemini-2.5-flash-lite", "framing": "student", "subject": "Place Value", "lift": 0.23611111111111113, "hit": 0.2916666666666667, "n": 72}, {"model": "gemini-2.5-flash-lite", "framing": "student", "subject": "Quadratic Equations", "lift": 0.06451612903225806, "hit": 0.11290322580645161, "n": 62}, {"model": "gemini-2.5-flash-lite", "framing": "student", "subject": "Substitution into Formula", "lift": 0.20689655172413796, "hit": 0.25862068965517243, "n": 58}, {"model": "gemini-2.5-flash-lite", "framing": "student", "subject": "Time", "lift": 0.39344262295081966, "hit": 0.4426229508196721, "n": 61}, {"model": "gemini-2.5-flash-lite", "framing": "student", "subject": "Writing Expressions", "lift": 0.19444444444444442, "hit": 0.2222222222222222, "n": 72}, {"model": "gemini-2.5-flash-lite", "framing": "teacher", "subject": "Adding and Subtracting Fractions", "lift": 0.24615384615384617, "hit": 0.35384615384615387, "n": 65}, {"model": "gemini-2.5-flash-lite", "framing": "teacher", "subject": "Averages (mean, median, mode) from a List of Data", "lift": 0.15517241379310343, "hit": 0.29310344827586204, "n": 58}, {"model": "gemini-2.5-flash-lite", "framing": "teacher", "subject": "BIDMAS", "lift": 0.13095238095238096, "hit": 0.20238095238095238, "n": 84}, {"model": "gemini-2.5-flash-lite", "framing": "teacher", "subject": "Linear Equations", "lift": 0.023809523809523808, "hit": 0.09523809523809523, "n": 84}, {"model": "gemini-2.5-flash-lite", "framing": "teacher", "subject": "Multiplying and Dividing with Decimals", "lift": 0.1728395061728395, "hit": 0.19753086419753085, "n": 81}, {"model": "gemini-2.5-flash-lite", "framing": "teacher", "subject": "Place Value", "lift": 0.16666666666666669, "hit": 0.2638888888888889, "n": 72}, {"model": "gemini-2.5-flash-lite", "framing": "teacher", "subject": "Quadratic Equations", "lift": 0.04838709677419355, "hit": 0.0967741935483871, "n": 62}, {"model": "gemini-2.5-flash-lite", "framing": "teacher", "subject": "Substitution into Formula", "lift": 0.18965517241379312, "hit": 0.2413793103448276, "n": 58}, {"model": "gemini-2.5-flash-lite", "framing": "teacher", "subject": "Time", "lift": 0.22950819672131145, "hit": 0.29508196721311475, "n": 61}, {"model": "gemini-2.5-flash-lite", "framing": "teacher", "subject": "Writing Expressions", "lift": 0.04166666666666667, "hit": 0.09722222222222222, "n": 72}, {"model": "gpt-4.1-mini", "framing": "student", "subject": "Adding and Subtracting Fractions", "lift": 0.16923076923076924, "hit": 0.4153846153846154, "n": 65}, {"model": "gpt-4.1-mini", "framing": "student", "subject": "Averages (mean, median, mode) from a List of Data", "lift": 0.4137931034482759, "hit": 0.6379310344827587, "n": 58}, {"model": "gpt-4.1-mini", "framing": "student", "subject": "BIDMAS", "lift": 0.25, "hit": 0.39285714285714285, "n": 84}, {"model": "gpt-4.1-mini", "framing": "student", "subject": "Linear Equations", "lift": 0.13095238095238096, "hit": 0.20238095238095238, "n": 84}, {"model": "gpt-4.1-mini", "framing": "student", "subject": "Multiplying and Dividing with Decimals", "lift": 0.37037037037037035, "hit": 0.48148148148148145, "n": 81}, {"model": "gpt-4.1-mini", "framing": "student", "subject": "Place Value", "lift": 0.4444444444444444, "hit": 0.5416666666666666, "n": 72}, {"model": "gpt-4.1-mini", "framing": "student", "subject": "Quadratic Equations", "lift": 0.16129032258064516, "hit": 0.3064516129032258, "n": 62}, {"model": "gpt-4.1-mini", "framing": "student", "subject": "Substitution into Formula", "lift": 0.3275862068965517, "hit": 0.43103448275862066, "n": 58}, {"model": "gpt-4.1-mini", "framing": "student", "subject": "Time", "lift": 0.47540983606557374, "hit": 0.6065573770491803, "n": 61}, {"model": "gpt-4.1-mini", "framing": "student", "subject": "Writing Expressions", "lift": 0.4305555555555556, "hit": 0.5833333333333334, "n": 72}, {"model": "gpt-4.1-mini", "framing": "teacher", "subject": "Adding and Subtracting Fractions", "lift": 0.16923076923076924, "hit": 0.4, "n": 65}, {"model": "gpt-4.1-mini", "framing": "teacher", "subject": "Averages (mean, median, mode) from a List of Data", "lift": 0.3448275862068966, "hit": 0.5517241379310345, "n": 58}, {"model": "gpt-4.1-mini", "framing": "teacher", "subject": "BIDMAS", "lift": 0.1904761904761905, "hit": 0.40476190476190477, "n": 84}, {"model": "gpt-4.1-mini", "framing": "teacher", "subject": "Linear Equations", "lift": 0.07142857142857145, "hit": 0.2619047619047619, "n": 84}, {"model": "gpt-4.1-mini", "framing": "teacher", "subject": "Multiplying and Dividing with Decimals", "lift": 0.17283950617283955, "hit": 0.5061728395061729, "n": 81}, {"model": "gpt-4.1-mini", "framing": "teacher", "subject": "Place Value", "lift": 0.3055555555555556, "hit": 0.5555555555555556, "n": 72}, {"model": "gpt-4.1-mini", "framing": "teacher", "subject": "Quadratic Equations", "lift": 0.19354838709677422, "hit": 0.3548387096774194, "n": 62}, {"model": "gpt-4.1-mini", "framing": "teacher", "subject": "Substitution into Formula", "lift": 0.27586206896551724, "hit": 0.46551724137931033, "n": 58}, {"model": "gpt-4.1-mini", "framing": "teacher", "subject": "Time", "lift": 0.3770491803278688, "hit": 0.5737704918032787, "n": 61}, {"model": "gpt-4.1-mini", "framing": "teacher", "subject": "Writing Expressions", "lift": 0.5694444444444445, "hit": 0.7361111111111112, "n": 72}, {"model": "gpt-4o-mini", "framing": "student", "subject": "Adding and Subtracting Fractions", "lift": 0.09230769230769231, "hit": 0.23076923076923078, "n": 65}, {"model": "gpt-4o-mini", "framing": "student", "subject": "Averages (mean, median, mode) from a List of Data", "lift": 0.31034482758620685, "hit": 0.43103448275862066, "n": 58}, {"model": "gpt-4o-mini", "framing": "student", "subject": "BIDMAS", "lift": 0.08333333333333331, "hit": 0.23809523809523808, "n": 84}, {"model": "gpt-4o-mini", "framing": "student", "subject": "Linear Equations", "lift": 0.10714285714285714, "hit": 0.21428571428571427, "n": 84}, {"model": "gpt-4o-mini", "framing": "student", "subject": "Multiplying and Dividing with Decimals", "lift": 0.2222222222222222, "hit": 0.2839506172839506, "n": 81}, {"model": "gpt-4o-mini", "framing": "student", "subject": "Place Value", "lift": 0.3194444444444445, "hit": 0.4027777777777778, "n": 72}, {"model": "gpt-4o-mini", "framing": "student", "subject": "Quadratic Equations", "lift": 0.12903225806451613, "hit": 0.1935483870967742, "n": 62}, {"model": "gpt-4o-mini", "framing": "student", "subject": "Substitution into Formula", "lift": 0.1896551724137931, "hit": 0.3275862068965517, "n": 58}, {"model": "gpt-4o-mini", "framing": "student", "subject": "Time", "lift": 0.31147540983606553, "hit": 0.3770491803278688, "n": 61}, {"model": "gpt-4o-mini", "framing": "student", "subject": "Writing Expressions", "lift": 0.2361111111111111, "hit": 0.3333333333333333, "n": 72}, {"model": "gpt-4o-mini", "framing": "teacher", "subject": "Adding and Subtracting Fractions", "lift": 0.2, "hit": 0.3384615384615385, "n": 65}, {"model": "gpt-4o-mini", "framing": "teacher", "subject": "Averages (mean, median, mode) from a List of Data", "lift": 0.3103448275862069, "hit": 0.39655172413793105, "n": 58}, {"model": "gpt-4o-mini", "framing": "teacher", "subject": "BIDMAS", "lift": 0.11904761904761907, "hit": 0.27380952380952384, "n": 84}, {"model": "gpt-4o-mini", "framing": "teacher", "subject": "Linear Equations", "lift": 0.0, "hit": 0.10714285714285714, "n": 84}, {"model": "gpt-4o-mini", "framing": "teacher", "subject": "Multiplying and Dividing with Decimals", "lift": 0.2222222222222222, "hit": 0.30864197530864196, "n": 81}, {"model": "gpt-4o-mini", "framing": "teacher", "subject": "Place Value", "lift": 0.29166666666666663, "hit": 0.3611111111111111, "n": 72}, {"model": "gpt-4o-mini", "framing": "teacher", "subject": "Quadratic Equations", "lift": 0.06451612903225806, "hit": 0.11290322580645161, "n": 62}, {"model": "gpt-4o-mini", "framing": "teacher", "subject": "Substitution into Formula", "lift": 0.20689655172413796, "hit": 0.3103448275862069, "n": 58}, {"model": "gpt-4o-mini", "framing": "teacher", "subject": "Time", "lift": 0.29508196721311475, "hit": 0.36065573770491804, "n": 61}, {"model": "gpt-4o-mini", "framing": "teacher", "subject": "Writing Expressions", "lift": 0.20833333333333337, "hit": 0.3055555555555556, "n": 72}, {"model": "gpt-5-mini", "framing": "student", "subject": "Adding and Subtracting Fractions", "lift": 0.26153846153846155, "hit": 0.4, "n": 65}, {"model": "gpt-5-mini", "framing": "student", "subject": "Averages (mean, median, mode) from a List of Data", "lift": 0.2931034482758621, "hit": 0.4827586206896552, "n": 58}, {"model": "gpt-5-mini", "framing": "student", "subject": "BIDMAS", "lift": 0.21428571428571427, "hit": 0.34523809523809523, "n": 84}, {"model": "gpt-5-mini", "framing": "student", "subject": "Linear Equations", "lift": 0.10714285714285714, "hit": 0.21428571428571427, "n": 84}, {"model": "gpt-5-mini", "framing": "student", "subject": "Multiplying and Dividing with Decimals", "lift": 0.2839506172839506, "hit": 0.4444444444444444, "n": 81}, {"model": "gpt-5-mini", "framing": "student", "subject": "Place Value", "lift": 0.2638888888888889, "hit": 0.4166666666666667, "n": 72}, {"model": "gpt-5-mini", "framing": "student", "subject": "Quadratic Equations", "lift": 0.16129032258064516, "hit": 0.25806451612903225, "n": 62}, {"model": "gpt-5-mini", "framing": "student", "subject": "Substitution into Formula", "lift": 0.2413793103448276, "hit": 0.39655172413793105, "n": 58}, {"model": "gpt-5-mini", "framing": "student", "subject": "Time", "lift": 0.21311475409836064, "hit": 0.39344262295081966, "n": 61}, {"model": "gpt-5-mini", "framing": "student", "subject": "Writing Expressions", "lift": 0.3194444444444444, "hit": 0.5, "n": 72}, {"model": "gpt-5-mini", "framing": "teacher", "subject": "Adding and Subtracting Fractions", "lift": 0.13846153846153847, "hit": 0.4153846153846154, "n": 65}, {"model": "gpt-5-mini", "framing": "teacher", "subject": "Averages (mean, median, mode) from a List of Data", "lift": 0.3793103448275862, "hit": 0.6206896551724138, "n": 58}, {"model": "gpt-5-mini", "framing": "teacher", "subject": "BIDMAS", "lift": 0.11904761904761904, "hit": 0.3333333333333333, "n": 84}, {"model": "gpt-5-mini", "framing": "teacher", "subject": "Linear Equations", "lift": 0.07142857142857145, "hit": 0.2619047619047619, "n": 84}, {"model": "gpt-5-mini", "framing": "teacher", "subject": "Multiplying and Dividing with Decimals", "lift": 0.18518518518518517, "hit": 0.4691358024691358, "n": 81}, {"model": "gpt-5-mini", "framing": "teacher", "subject": "Place Value", "lift": 0.3472222222222222, "hit": 0.5277777777777778, "n": 72}, {"model": "gpt-5-mini", "framing": "teacher", "subject": "Quadratic Equations", "lift": 0.14516129032258063, "hit": 0.3387096774193548, "n": 62}, {"model": "gpt-5-mini", "framing": "teacher", "subject": "Substitution into Formula", "lift": 0.3275862068965517, "hit": 0.5, "n": 58}, {"model": "gpt-5-mini", "framing": "teacher", "subject": "Time", "lift": 0.34426229508196726, "hit": 0.6229508196721312, "n": 61}, {"model": "gpt-5-mini", "framing": "teacher", "subject": "Writing Expressions", "lift": 0.4722222222222222, "hit": 0.6805555555555556, "n": 72}]}, "consistency": {"labels": ["never", "1–33%", "34–66%", "67–99%", "always"], "data": {"claude-haiku-4-5": {"student": {"n": 248, "bins": [26, 73, 59, 47, 43], "median": 0.5}, "teacher": {"n": 248, "bins": [24, 65, 51, 59, 49], "median": 0.5227272727272727}}, "gemini-2.5-flash-lite": {"student": {"n": 248, "bins": [96, 89, 36, 20, 7], "median": 0.2}, "teacher": {"n": 248, "bins": [120, 82, 28, 12, 6], "median": 0.10101010101010101}}, "gpt-4.1-mini": {"student": {"n": 248, "bins": [31, 72, 56, 56, 33], "median": 0.44786096256684493}, "teacher": {"n": 248, "bins": [12, 84, 67, 53, 32], "median": 0.5}}, "gpt-4o-mini": {"student": {"n": 248, "bins": [71, 94, 48, 24, 11], "median": 0.25}, "teacher": {"n": 248, "bins": [65, 108, 45, 23, 7], "median": 0.25}}, "gpt-5-mini": {"student": {"n": 248, "bins": [39, 88, 55, 47, 19], "median": 0.3333333333333333}, "teacher": {"n": 248, "bins": [22, 80, 65, 45, 36], "median": 0.5}}}}, "examples": [{"id": "fractions", "text": "Work out 1/2 + 1/3", "correct": "B", "options": {"A": "2/5", "B": "5/6", "C": "1/6", "D": "2/6"}, "misconceptions": {"A": "Adds the numerators together and adds the denominators together", "C": "Multiplies the fractions when asked to add them", "D": "Adds the numerators but multiplies the denominators"}, "control": "Thinks that the angles in a triangle add up to 360 degrees", "answers": {"gpt-4o-mini": {"none": "B", "A|matched": "D", "A|mismatched": "B", "C|matched": "D", "C|mismatched": "B", "D|matched": "D", "D|mismatched": "B"}, "gpt-4.1-mini": {"none": "B", "A|matched": "A", "A|mismatched": "B", "C|matched": "C", "C|mismatched": "B", "D|matched": "A", "D|mismatched": "B"}, "claude-haiku-4-5": {"none": "B", "A|matched": "A", "A|mismatched": "B", "C|matched": "C", "C|mismatched": "B", "D|matched": "A", "D|mismatched": "B"}, "gemini-2.5-flash-lite": {"none": "B", "A|matched": "A", "A|mismatched": "A", "C|matched": "B", "C|mismatched": "A", "D|matched": "A", "D|mismatched": "A"}, "gpt-5-mini": {"none": "B", "A|matched": "A", "A|mismatched": "B", "C|matched": "A", "C|mismatched": "B", "D|matched": "A", "D|mismatched": "B"}, "gpt-5.4": {"none": "B", "A|matched": "A", "A|mismatched": "B", "C|matched": "C", "C|mismatched": "B", "D|matched": "A", "D|mismatched": "B"}, "gpt-5.4-think": {"none": "B", "A|matched": "A", "A|mismatched": "B", "C|matched": "C", "C|mismatched": "B", "D|matched": "D", "D|mismatched": "B"}, "claude-sonnet-4-6": {"none": "B", "A|matched": "A", "A|mismatched": "B", "C|matched": "C", "C|mismatched": "B", "D|matched": "D", "D|mismatched": "B"}, "gemini-3.1-pro": {"none": "B", "A|matched": "A", "A|mismatched": "B", "C|matched": "C", "C|mismatched": "B", "D|matched": "D", "D|mismatched": "B"}}}, {"id": "order", "text": "Work out 3 + 4 × 2", "correct": "C", "options": {"A": "14", "B": "9", "C": "11", "D": "24"}, "misconceptions": {"A": "Always works through a calculation from left to right, one step at a time", "B": "Adds every number in the calculation instead of following the operations", "D": "Multiplies every number in the calculation instead of following the operations"}, "control": "Believes a percentage of a number is found by dividing the number by the percentage", "answers": {"gpt-4o-mini": {"none": "C", "A|matched": "B", "A|mismatched": "C", "B|matched": "A", "B|mismatched": "C", "D|matched": "A", "D|mismatched": "C"}, "gpt-4.1-mini": {"none": "C", "A|matched": "B", "A|mismatched": "B", "B|matched": "D", "B|mismatched": "B", "D|matched": "D", "D|mismatched": "B"}, "claude-haiku-4-5": {"none": "C", "A|matched": "A", "A|mismatched": "C", "B|matched": "A", "B|mismatched": "C", "D|matched": "D", "D|mismatched": "C"}, "gemini-2.5-flash-lite": {"none": "B", "A|matched": "B", "A|mismatched": "C", "B|matched": "A", "B|mismatched": "C", "D|matched": "D", "D|mismatched": "C"}, "gpt-5-mini": {"none": "C", "A|matched": "C", "A|mismatched": "A", "B|matched": "C", "B|mismatched": "A", "D|matched": "D", "D|mismatched": "A"}, "gpt-5.4": {"none": "C", "A|matched": "C", "A|mismatched": "C", "B|matched": "C", "B|mismatched": "C", "D|matched": "D", "D|mismatched": "C"}, "gpt-5.4-think": {"none": "C", "A|matched": "A", "A|mismatched": "C", "B|matched": "B", "B|mismatched": "C", "D|matched": "D", "D|mismatched": "C"}, "claude-sonnet-4-6": {"none": "C", "A|matched": "A", "A|mismatched": "C", "B|matched": "A", "B|mismatched": "C", "D|matched": "D", "D|mismatched": "C"}, "gemini-3.1-pro": {"none": "C", "A|matched": "A", "A|mismatched": "C", "B|matched": "B", "B|mismatched": "C", "D|matched": "D", "D|mismatched": "C"}}}]};
+const FR = ["student", "teacher"];
+let FRAMING = "student";
+const M = Object.fromEntries(D.models.map(m => [m.key, m]));
+const TIERS = [["small", "SMALL"], ["large", "LARGE"], ["thinking", "LARGE + THINKING"]];
+const pct = v => (v == null || isNaN(v)) ? "–" : Math.round(v * 100) + "%";
+const pts = v => (v == null || isNaN(v)) ? "–" : (v >= 0 ? "+" : "−") + Math.abs(Math.round(v * 100));
+const usd = v => v >= 100 ? "$" + Math.round(v) : v >= 10 ? "$" + v.toFixed(0) : v >= 1 ? "$" + v.toFixed(2) : "$" + v.toFixed(2);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function txt(parent, x, y, s, attrs = {}) { const t = el("text", { x, y, ...attrs }, parent); t.textContent = s; return t; }
+const root = document.getElementById("root"), tip = document.getElementById("tip");
+function showTip(ev, html) { tip.innerHTML = html; tip.style.display = "block"; moveTip(ev); }
+function moveTip(ev) { const w = tip.offsetWidth, h = tip.offsetHeight; let x = ev.clientX + 16, y = ev.clientY + 16;
+  if (x + w > innerWidth - 8) x = ev.clientX - w - 16; if (y + h > innerHeight - 8) y = ev.clientY - h - 16; tip.style.left = x + "px"; tip.style.top = y + "px"; }
+function hideTip() { tip.style.display = "none"; }
+// Hover a model anywhere: it stays lit across every chart in the tab, the rest dim.
+function hl(m) { document.querySelectorAll("[data-m]").forEach(e => e.classList.toggle("on", e.dataset.m === m)); root.classList.toggle("hl-on", !!m); }
+function hover(node, html, m) {
+  node.addEventListener("pointerenter", e => { showTip(e, typeof html === "function" ? html() : html); if (m) hl(m); });
+  node.addEventListener("pointermove", moveTip);
+  node.addEventListener("pointerleave", () => { hideTip(); if (m) hl(null); });
+}
+function shape(parent, tier, cx, cy, r, attrs) {
+  if (tier === "small") return el("circle", { cx, cy, r, ...attrs }, parent);
+  if (tier === "large") return el("rect", { x: cx - r * .88, y: cy - r * .88, width: r * 1.76, height: r * 1.76, rx: 2, ...attrs }, parent);
+  const q = r * 1.25; return el("path", { d: `M${cx} ${cy - q} L${cx + q} ${cy} L${cx} ${cy + q} L${cx - q} ${cy} Z`, ...attrs }, parent);
+}
+const TCOL = { small: "var(--tier-small)", large: "var(--tier-large)", thinking: "var(--tier-think)" };
+const F = m => m[FRAMING];
+const OVER = .15; // accuracy lost to an unrelated belief that counts as over-acting
+function grid(svg, x, vals, y0, y1, fmt = pct, labelY = 14) {
+  vals.forEach(v => { el("line", { x1: x(v), x2: x(v), y1: y0, y2: y1, stroke: "var(--grid)" }, svg); txt(svg, x(v), labelY, fmt(v), { "text-anchor": "middle", class: "mut" }); });
+}
+function rowsByTier(cb, start, rowH, tierH) {
+  let y = start;
+  TIERS.forEach(([t, name]) => {
+    const ms = D.models.filter(m => m.tier === t); if (!ms.length) return;
+    cb.tier(t, name, y); y += tierH;
+    ms.forEach(m => { cb.row(m, y + rowH / 2); y += rowH; });
+    y += 6;
+  });
+  return y;
+}
+function mount(id, svg) { const b = document.getElementById(id); b.innerHTML = ""; b.appendChild(svg); }
+
+// Fill numbers in the prose
+document.querySelectorAll("[data-c]").forEach(n => n.textContent = Number(D.counts[n.dataset.c]).toLocaleString());
+
+// Tabs (with #edtech / #llm links)
+function setTab(t) {
+  document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
+  document.querySelectorAll(".tab").forEach(s => s.classList.toggle("on", s.id === "tab-" + t));
+  if (location.hash !== "#" + t) history.replaceState(null, "", "#" + t);
+}
+document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => setTab(b.dataset.tab));
+document.querySelectorAll("[data-goto]").forEach(a => a.onclick = e => { e.preventDefault(); setTab(a.dataset.goto); scrollTo({ top: 0, behavior: "smooth" }); });
+if (location.hash === "#llm") setTab("llm");
+document.querySelectorAll("[data-theme-set]").forEach(b => b.onclick = () => { document.documentElement.setAttribute("data-theme", b.dataset.themeSet); drawAll(); });
+if (matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.setAttribute("data-theme", "dark");
+
+// ---------- Model cards ----------
+(function cards() {
+  const blurb = {
+    small: ["Small and cheap", "Fractions of a cent per call. All five also ran on the full set of pairs."],
+    large: ["Large", "Current flagship-class models, answering straight away with no private reasoning."],
+    thinking: ["Large + thinking", "Reason privately before answering. GPT-5.4 is the same model as above with thinking switched on; Gemini 3.1 Pro always thinks."],
+  };
+  document.getElementById("modelCards").innerHTML = TIERS.map(([t]) => {
+    const ms = D.models.filter(m => m.tier === t);
+    const icon = t === "small" ? `<circle cx="9" cy="9" r="7" fill="${TCOL[t]}"/>` : t === "large" ? `<rect x="2" y="2" width="14" height="14" rx="2" fill="${TCOL[t]}"/>` : `<path d="M9 0.5 L17.5 9 L9 17.5 L0.5 9 Z" fill="${TCOL[t]}"/>`;
+    return `<div class="card"><h3><svg width="18" height="18">${icon}</svg>${blurb[t][0]}</h3><p class="sub" style="margin:0 0 6px;font-size:14.5px">${blurb[t][1]}</p>
+      <ul>${ms.map(m => `<li><b>${esc(m.name)}</b> <span class="muted" style="font-size:13px;white-space:nowrap">· ${usd(m.cost_call * 1000)} / 1k calls</span></li>`).join("")}</ul></div>`;
+  }).join("");
+})();
+
+// ---------- Try-it widget (our own questions) ----------
+let exI = 0, exT = null;
+(function () {
+  const box = document.getElementById("exQ");
+  D.examples.forEach((q, i) => { const b = document.createElement("button"); b.textContent = q.text; b.setAttribute("aria-pressed", i === 0);
+    b.onclick = () => { exI = i; exT = null; box.querySelectorAll("button").forEach((x, j) => x.setAttribute("aria-pressed", j === i)); drawEx(); }; box.appendChild(b); });
+})();
+function drawEx() {
+  const q = D.examples[exI];
+  if (!exT) exT = Object.keys(q.misconceptions)[0];
+  document.getElementById("exText").textContent = q.text + " = ?";
+  document.getElementById("exOpts").innerHTML = ["A", "B", "C", "D"].map(L => L === q.correct
+    ? `<div class="opt correct"><div class="v">${esc(q.options[L])}</div><div class="m">✓ correct answer</div></div>`
+    : `<button class="opt" data-L="${L}" aria-pressed="${L === exT}"><div class="v">${esc(q.options[L])}</div><div class="m">${esc(q.misconceptions[L])}</div></button>`).join("");
+  document.querySelectorAll("#exOpts button").forEach(b => b.onclick = () => { exT = b.dataset.L; drawEx(); });
+  document.getElementById("exPersona").innerHTML = `<span class="sub">Persona given to every model:</span> <span class="quote">"You are a student who is normal in every way except you firmly believe: ${esc(q.misconceptions[exT])}."</span>`;
+  let hits = 0;
+  document.getElementById("exAns").innerHTML = D.models.map(m => {
+    const a = q.answers[m.key] || {}, p = a[`${exT}|matched`];
+    const cls = p === exT ? "hit" : p === q.correct ? "slip" : "other"; if (cls === "hit") hits++;
+    const lab = cls === "hit" ? "intended mistake" : cls === "slip" ? "correct anyway" : "different mistake";
+    return `<div class="ans" data-m="${m.key}" title="${esc(m.name)}: no persona → ${esc(q.options[a.none] || "?")}; unrelated belief → ${esc(q.options[a[`${exT}|mismatched`]] || "?")}">
+      <span>${esc(m.name)}</span><span class="pick ${cls}">${esc(q.options[p] || "?")} · ${lab}</span></div>`;
+  }).join("") + `<div class="ans" style="background:transparent"><span class="sub">${hits} of ${D.models.length} made the intended mistake.</span></div>`;
+}
+
+// ---------- EDTECH G1: dumbbell ----------
+function eG1() {
+  const W = 960, L = 210, R = 840, rowH = 32, tierH = 24, top = 34;
+  const svg = el("svg", { viewBox: `0 0 ${W} 10`, width: "100%", role: "img", "aria-label": "Matched vs control hit rate per model" });
+  const x = v => L + v * (R - L);
+  const H = rowsByTier({
+    tier: (t, name, y) => { txt(svg, 0, y + 16, name, { class: "tierlab" }); el("line", { x1: 0, x2: W, y1: y + 22, y2: y + 22, stroke: "var(--grid)" }, svg); },
+    row: (m, cy) => {
+      const r = F(m), g = el("g", { "data-m": m.key }, svg);
+      el("rect", { x: 0, y: cy - rowH / 2, width: W, height: rowH, fill: "transparent" }, g);
+      txt(g, 14, cy + 4.5, m.name, { class: "ink", "font-weight": 600, "font-size": 13.5 });
+      el("rect", { x: x(r.ci_hit_m[0]), y: cy - 6, width: Math.max(2, x(r.ci_hit_m[1]) - x(r.ci_hit_m[0])), height: 12, rx: 6, fill: "var(--t1)" }, g);
+      el("line", { x1: x(r.hit_c), x2: x(r.hit_m), y1: cy, y2: cy, stroke: "var(--s1)", "stroke-width": 2.5, "stroke-linecap": "round" }, g);
+      el("circle", { cx: x(r.hit_c), cy, r: 5.5, fill: "var(--surface-1)", stroke: "var(--muted)", "stroke-width": 2 }, g);
+      shape(g, m.tier, x(r.hit_m), cy, 7, { fill: "var(--s1)", stroke: "var(--surface-1)", "stroke-width": 2 });
+      txt(g, Math.max(x(r.hit_m) + 12, x(r.ci_hit_m[1]) + 6), cy + 4.5, pct(r.hit_m), { class: "ink", "font-weight": 650 });
+      txt(g, R + 70, cy + 4.5, pts(r.lift), { "text-anchor": "end", class: "ink", "font-weight": 650 });
+      hover(g, () => `<b>${esc(m.name)}</b> · ${FRAMING} wording<br>Matching belief: <b>${pct(r.hit_m)}</b> picked the trap (95% range ${pct(r.ci_hit_m[0])}–${pct(r.ci_hit_m[1])})<br>Unrelated belief: ${pct(r.hit_c)}<br>Lift: <b>${pts(r.lift)} pts</b> (${pts(r.ci_lift[0])} to ${pts(r.ci_lift[1])})<br><span style="color:var(--muted)">${r.n} pairs</span>`, m.key);
+    }
+  }, top, rowH, tierH);
+  el("line", { x1: x(.25), x2: x(.25), y1: top - 8, y2: H, stroke: "var(--text-secondary)", "stroke-dasharray": "3 4" }, svg);
+  txt(svg, x(.25) + 5, top - 12, "blind guess (1 in 4)", { "font-size": 11.5 });
+  grid(svg, x, [0, .5, .75, 1], top - 8, H, pct, 14);
+  txt(svg, R + 70, 14, "lift", { "text-anchor": "end", class: "mut" });
+  svg.setAttribute("viewBox", `0 0 ${W} ${H + 4}`);
+  mount("eG1", svg);
+  const s = D.models.filter(m => m.tier === "small"), best = [...s].sort((a, b) => F(b).hit_m - F(a).hit_m)[0];
+  const think = D.models.filter(m => m.tier === "thinking"), lg = D.models.filter(m => m.tier === "large");
+  const rng = ms => `${pct(Math.min(...ms.map(m => F(m).hit_m)))}–${pct(Math.max(...ms.map(m => F(m).hit_m)))}`;
+  document.getElementById("eT1").innerHTML = `With an unrelated belief, models pick the trap only ${pct(Math.min(...D.models.map(m => F(m).hit_c)))}–${pct(Math.max(...D.models.map(m => F(m).hit_c)))} of the time.
+    Give them the matching belief and every model jumps. The best small model, ${esc(best.name)}, makes the intended mistake <mark class="hit">${pct(F(best).hit_m)}</mark> of the time.
+    The large models reach ${rng(lg)}, and the two thinking models <mark class="hit">${rng(think)}</mark>. Same questions, same prompt, and the gap is far outside the error bars.`;
+}
+
+// ---------- EDTECH G2: selectivity scatter ----------
+function eG2() {
+  const W = 960, H = 470, L = 70, R = 930, T = 20, B = 410;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Stays right when unrelated vs hits when matched" });
+  const x0 = .3, x1 = 1, y1 = .85, x = v => L + (v - x0) / (x1 - x0) * (R - L), y = v => B - v / y1 * (B - T);
+  el("rect", { x: x(.85), y: y(y1), width: x(1) - x(.85), height: y(.6) - y(y1), fill: "var(--t3)", rx: 8 }, svg);
+  txt(svg, x(1) - 10, y(y1) + 20, "what an audit tool needs", { "text-anchor": "end", class: "ink", "font-weight": 600 });
+  [.4, .5, .6, .7, .8, .9, 1].forEach(v => { el("line", { x1: x(v), x2: x(v), y1: T, y2: B, stroke: "var(--grid)" }, svg); txt(svg, x(v), B + 20, pct(v), { "text-anchor": "middle", class: "mut" }); });
+  [0, .2, .4, .6, .8].forEach(v => { el("line", { x1: L, x2: R, y1: y(v), y2: y(v), stroke: "var(--grid)" }, svg); txt(svg, L - 10, y(v) + 4, pct(v), { "text-anchor": "end", class: "mut" }); });
+  txt(svg, (L + R) / 2, H - 14, "Answers correctly when its misconception is unrelated  →", { "text-anchor": "middle", class: "ink", "font-weight": 600 });
+  txt(svg, 16, (T + B) / 2, "Falls into the matching trap  →", { "text-anchor": "middle", class: "ink", "font-weight": 600, transform: `rotate(-90 16 ${(T + B) / 2})` });
+  const a = M["gpt-5.4"], b = M["gpt-5.4-think"];
+  if (a && b) {
+    const defs = el("defs", {}, svg), mk = el("marker", { id: "arr", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto" }, defs);
+    el("path", { d: "M0 0 L10 5 L0 10 Z", fill: "var(--s1)" }, mk);
+    const ax = x(F(a).correct_c), ay = y(F(a).hit_m), bx = x(F(b).correct_c), by = y(F(b).hit_m), d = Math.hypot(bx - ax, by - ay);
+    el("line", { x1: ax + (bx - ax) * 12 / d, y1: ay + (by - ay) * 12 / d, x2: bx - (bx - ax) * 14 / d, y2: by - (by - ay) * 14 / d, stroke: "var(--s1)", "stroke-width": 2.5, "marker-end": "url(#arr)" }, svg);
+    txt(svg, (ax + bx) / 2 - 8, (ay + by) / 2 - 10, "thinking on", { style: "fill:var(--s1)", "font-weight": 700, "text-anchor": "end" });
+  }
+  const placed = [];
+  D.models.forEach(m => {
+    const r = F(m), cx = x(r.correct_c), cy = y(r.hit_m), g = el("g", { "data-m": m.key }, svg);
+    el("circle", { cx, cy, r: 18, fill: "transparent" }, g);
+    shape(g, m.tier, cx, cy, 8, { fill: TCOL[m.tier], stroke: "var(--surface-1)", "stroke-width": 2 });
+    let ly = cy + 4.5; const right = cx < R - 150;
+    for (const p of placed) if (Math.abs(p.x - cx) < 160 && Math.abs(p.y - ly) < 15) ly = p.y + (ly >= p.y ? 15 : -15);
+    placed.push({ x: cx, y: ly });
+    txt(g, right ? cx + 13 : cx - 13, ly, m.name, { class: "ink", "font-size": 12.5, "text-anchor": right ? "start" : "end" });
+    hover(g, () => `<b>${esc(m.name)}</b> · ${FRAMING} wording<br>Matching belief → trap: <b>${pct(r.hit_m)}</b><br>Unrelated belief → still correct: <b>${pct(r.correct_c)}</b> (${pct(r.ci_correct_c[0])}–${pct(r.ci_correct_c[1])})<br>No persona → correct: ${pct(M[m.key].alone)}`, m.key);
+  });
+  mount("eG2", svg);
+  const t = M["gpt-5.4-think"], g5 = M["gpt-5.4"];
+  const over = D.models.filter(m => M[m.key].alone - F(m).correct_c > OVER);
+  document.getElementById("eT2").innerHTML = (t && g5 ? `Thinking moves GPT-5.4 <b>up and to the right at the same time</b>: from ${pct(F(g5).hit_m)} to <mark class="hit">${pct(F(t).hit_m)}</mark> on the trap, and from ${pct(F(g5).correct_c)} to <mark class="slip">${pct(F(t).correct_c)}</mark> correct when the belief doesn't apply. It isn't just "more wrong", it's wrong in the right places. ` : "") +
+    (over.length ? `With the ${FRAMING} wording, ${over.map(m => esc(m.name)).join(", ")} ${over.length > 1 ? "slide" : "slides"} left, losing more than ${Math.round(OVER * 100)} points of accuracy on questions their misconception has nothing to do with. Told to be "a confused student", ${over.length > 1 ? "they act" : "it acts"} confused about everything. ${FRAMING === "teacher" ? "That's why the <b>student</b> wording is the one to build on." : "Switch to <b>teacher</b> wording to see it get worse."}` : `With the ${FRAMING} wording no model loses more than ${Math.round(OVER * 100)} points of accuracy to an unrelated belief.`);
+}
+
+// ---------- EDTECH G3: cost vs quality ----------
+function eG3() {
+  const W = 960, H = 430, L = 70, R = 900, T = 20, B = 370;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Cost per 1,000 questions vs hit rate" });
+  const lo = Math.log10(.3), hi = Math.log10(300), x = v => L + (Math.log10(v) - lo) / (hi - lo) * (R - L), y = v => B - v / .85 * (B - T);
+  [1, 3, 10, 30, 100].forEach(v => { el("line", { x1: x(v), x2: x(v), y1: T, y2: B, stroke: "var(--grid)" }, svg); txt(svg, x(v), B + 20, "$" + v, { "text-anchor": "middle", class: "mut" }); });
+  [0, .2, .4, .6, .8].forEach(v => { el("line", { x1: L, x2: R, y1: y(v), y2: y(v), stroke: "var(--grid)" }, svg); txt(svg, L - 10, y(v) + 4, pct(v), { "text-anchor": "end", class: "mut" }); });
+  txt(svg, (L + R) / 2, H - 14, `Cost to audit 1,000 questions (${D.counts.panel} personas each, log scale)  →`, { "text-anchor": "middle", class: "ink", "font-weight": 600 });
+  txt(svg, 16, (T + B) / 2, "Falls into the matching trap  →", { "text-anchor": "middle", class: "ink", "font-weight": 600, transform: `rotate(-90 16 ${(T + B) / 2})` });
+  const placed = [];
+  [...D.models].sort((a, b) => a.cost_1000q - b.cost_1000q).forEach(m => {
+    const r = F(m), cx = x(m.cost_1000q), cy = y(r.hit_m), g = el("g", { "data-m": m.key }, svg);
+    el("line", { x1: cx, x2: cx, y1: y(r.ci_hit_m[0]), y2: y(r.ci_hit_m[1]), stroke: "var(--s1)", "stroke-width": 2, "stroke-opacity": .5 }, g);
+    el("circle", { cx, cy, r: 18, fill: "transparent" }, g);
+    shape(g, m.tier, cx, cy, 8, { fill: TCOL[m.tier], stroke: "var(--surface-1)", "stroke-width": 2 });
+    let ly = cy + 4.5; const right = cx < R - 160;
+    for (const p of placed) if (Math.abs(p.x - cx) < 170 && Math.abs(p.y - ly) < 15) ly = p.y + (ly >= p.y ? 15 : -15);
+    placed.push({ x: cx, y: ly });
+    txt(g, right ? cx + 13 : cx - 13, ly, m.name, { class: "ink", "font-size": 12.5, "text-anchor": right ? "start" : "end" });
+    hover(g, () => `<b>${esc(m.name)}</b><br>Measured cost: ${usd(m.cost_call * 1000)} per 1,000 calls<br>Audit of 1,000 questions: <b>${usd(m.cost_1000q)}</b> (${usd(m.cost_1000q / 1000 * 100)} per 100)<br>Trap hit rate (${FRAMING}): <b>${pct(r.hit_m)}</b>`, m.key);
+  });
+  mount("eG3", svg);
+  const best = [...D.models].sort((a, b) => F(b).hit_m - F(a).hit_m)[0], cheap = [...D.models].filter(m => m.tier === "small").sort((a, b) => F(b).hit_m - F(a).hit_m)[0];
+  document.getElementById("eT3").innerHTML = `Quality costs money, but not much. The best performer here, ${esc(best.name)}, would audit 1,000 questions for about <mark class="hit">${usd(best.cost_1000q)}</mark>, around ${usd(best.cost_1000q / 1000)} a question.
+    The best small model, ${esc(cheap.name)}, costs ${usd(cheap.cost_1000q)} for the same job but hits ${Math.round((F(best).hit_m - F(cheap).hit_m) * 100)} points less often.
+    For an item bank, even the top setup is small change next to the expert time a manual review takes.`;
+}
+
+// ---------- EDTECH deep dive ----------
+function eD1() {
+  const W = 960, L = 290, R = 900, rowH = 26, top = 30, small = D.models.filter(m => m.tier === "small");
+  const H = top + small.length * (2 * rowH + 12);
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Lift, subset vs full run" });
+  const x = v => L + v / .6 * (R - L);
+  grid(svg, x, [0, .1, .2, .3, .4, .5, .6], top - 8, H, v => pts(v), 14);
+  let yy = top;
+  small.forEach(m => {
+    const a = F(m), b = D.full[m.key][FRAMING], g = el("g", { "data-m": m.key }, svg);
+    el("rect", { x: 0, y: yy, width: W, height: 2 * rowH, fill: "transparent" }, g);
+    txt(g, 0, yy + rowH, m.name, { class: "ink", "font-weight": 600 });
+    [[a, `${a.n} shared pairs`, false], [b, `all ${b.n.toLocaleString()} pairs`, true]].forEach(([r, lab, fill], i) => {
+      const cy = yy + i * rowH + rowH / 2;
+      txt(g, L - 12, cy + 4, lab, { "text-anchor": "end", "font-size": 11.5 });
+      el("line", { x1: x(r.ci_lift[0]), x2: x(r.ci_lift[1]), y1: cy, y2: cy, stroke: "var(--s1)", "stroke-width": 2 }, g);
+      el("circle", { cx: x(r.lift), cy, r: 6, fill: fill ? "var(--s1)" : "var(--surface-1)", stroke: "var(--s1)", "stroke-width": 2 }, g);
+    });
+    hover(g, () => `<b>${esc(m.name)}</b> · ${FRAMING}<br>Shared pairs: ${pts(a.lift)} (${pts(a.ci_lift[0])} to ${pts(a.ci_lift[1])})<br>All pairs: <b>${pts(b.lift)}</b> (${pts(b.ci_lift[0])} to ${pts(b.ci_lift[1])})`, m.key);
+    yy += 2 * rowH + 12;
+  });
+  mount("eD1", svg);
+}
+function eD2() {
+  const S = D.subjects, small = D.models.filter(m => m.tier === "small");
+  const cs = getComputedStyle(root), h2r = h => [1, 3, 5].map(i => parseInt(h.trim().slice(i, i + 2), 16));
+  const A = h2r(cs.getPropertyValue("--surface-2")), Bc = h2r(cs.getPropertyValue("--s1"));
+  let html = `<table class="heat"><tr><th>Topic <span class="muted">(pairs)</span></th>` + small.map(m => `<th style="text-align:center">${esc(m.name)}</th>`).join("") + `</tr>`;
+  S.subjects.forEach(s => {
+    html += `<tr><td>${esc(s.name)} <span class="muted">(${s.n})</span></td>`;
+    small.forEach(m => {
+      const c = S.cells.find(z => z.model === m.key && z.framing === FRAMING && z.subject === s.name);
+      if (!c) { html += `<td class="cell">–</td>`; return; }
+      const t = Math.max(0, Math.min(1, c.lift / .6)), col = A.map((v, i) => Math.round(v + (Bc[i] - v) * t));
+      html += `<td class="cell" data-m="${m.key}" style="background:rgb(${col})" title="${esc(m.name)} · ${esc(s.name)}: trap ${pct(c.hit)}, lift ${pts(c.lift)} (n=${c.n})"><span style="color:${t > .55 ? "#fff" : "var(--text-primary)"}">${pts(c.lift)}</span></td>`;
+    });
+    html += `</tr>`;
+  });
+  document.getElementById("eD2").innerHTML = html + `</table>`;
+}
+function eD3() {
+  const C = D.consistency, small = D.models.filter(m => m.tier === "small"), box = document.getElementById("eD3"); box.innerHTML = "";
+  const mx = Math.max(...small.map(m => Math.max(...(C.data[m.key]?.[FRAMING]?.bins || [0]))));
+  small.forEach(m => {
+    const c = C.data[m.key]?.[FRAMING]; if (!c) return;
+    const card = document.createElement("div"); card.className = "card"; card.dataset.m = m.key; card.style.margin = "0";
+    card.innerHTML = `<h3 style="font-size:15px">${esc(m.name)}</h3><div class="muted" style="font-size:12.5px">${c.n} misconceptions · median ${pct(c.median)}</div>`;
+    const W = 300, H = 150, B = 118, T = 18, svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%" }), slot = W / 5, bw = 30;
+    el("line", { x1: 0, x2: W, y1: B, y2: B, stroke: "var(--axis)" }, svg);
+    c.bins.forEach((n, i) => {
+      const h = (B - T) * n / mx, cx = slot * i + slot / 2, x0 = cx - bw / 2, yt = B - h, r = Math.min(4, h), g = el("g", {}, svg);
+      el("rect", { x: slot * i, y: 0, width: slot, height: B, fill: "transparent" }, g);
+      if (h > 0) el("path", { d: `M${x0},${B} V${yt + r} Q${x0},${yt} ${x0 + r},${yt} H${x0 + bw - r} Q${x0 + bw},${yt} ${x0 + bw},${yt + r} V${B} Z`, fill: "var(--s1)" }, g);
+      txt(g, cx, yt - 5, n, { "text-anchor": "middle", class: "ink" });
+      txt(g, cx, B + 16, C.labels[i], { "text-anchor": "middle", class: "mut", "font-size": 11 });
+      hover(g, `<b>${esc(m.name)}</b><br>${n} misconceptions hit on ${C.labels[i]} of their questions`);
+    });
+    txt(svg, W / 2, H - 2, "share of its questions hit", { "text-anchor": "middle", class: "mut", "font-size": 11 });
+    card.appendChild(svg); box.appendChild(card);
+  });
+}
+function eD4() {
+  const r = m => F(m);
+  document.getElementById("eD4").innerHTML = `<table><tr><th>Model</th><th class="num">Trap (matching)</th><th class="num">Trap (unrelated)</th><th class="num">Lift</th><th class="num">Correct (matching)</th><th class="num">Correct (unrelated)</th><th class="num">Correct (no persona)</th><th class="num">$ / 1,000 calls</th></tr>` +
+    D.models.map(m => `<tr data-m="${m.key}"><td>${esc(m.name)}</td><td class="num"><b>${pct(r(m).hit_m)}</b> <span class="muted">${pct(r(m).ci_hit_m[0])}–${pct(r(m).ci_hit_m[1])}</span></td><td class="num">${pct(r(m).hit_c)}</td><td class="num">${pts(r(m).lift)}</td><td class="num">${pct(r(m).slip_m)}</td><td class="num">${pct(r(m).correct_c)}</td><td class="num">${pct(m.alone)}</td><td class="num">${usd(m.cost_call * 1000)}</td></tr>`).join("") + `</table>`;
+}
+
+// ---------- LLM G1: where answers land ----------
+function lG1() {
+  const W = 960, L = 210, R = 820, rowH = 32, tierH = 24, top = 30, bar = 20;
+  const svg = el("svg", { viewBox: `0 0 ${W} 10`, width: "100%", role: "img", "aria-label": "Outcome mix for matched personas" });
+  const x = v => L + v * (R - L);
+  const segs = [["hit_m", "var(--s1)", "intended mistake"], ["slip_m", "var(--s2)", "correct answer"], ["other_m", "var(--s3)", "a different wrong option"], ["inv_m", "var(--none)", "no valid answer"]];
+  const H = rowsByTier({
+    tier: (t, name, y) => { txt(svg, 0, y + 16, name, { class: "tierlab" }); el("line", { x1: 0, x2: W, y1: y + 22, y2: y + 22, stroke: "var(--grid)" }, svg); },
+    row: (m, cy) => {
+      const r = F(m), g = el("g", { "data-m": m.key }, svg);
+      txt(g, 14, cy + 4.5, m.name, { class: "ink", "font-weight": 600, "font-size": 13.5 });
+      let acc = 0; const vis = segs.filter(s => r[s[0]] > .001);
+      vis.forEach(([k, col, name], j) => {
+        const v = r[k], x0 = x(acc) + (j ? 1 : 0), x1 = x(acc + v) - (j < vis.length - 1 ? 1 : 0), w = Math.max(0, x1 - x0), sg = el("g", {}, g);
+        const rr = 4, yt = cy - bar / 2, first = j === 0, last = j === vis.length - 1;
+        el("path", { d: `M${x0 + (first ? rr : 0)},${yt} H${x1 - (last ? rr : 0)} ${last ? `Q${x1},${yt} ${x1},${yt + rr} V${yt + bar - rr} Q${x1},${yt + bar} ${x1 - rr},${yt + bar}` : `V${yt + bar}`} H${x0 + (first ? rr : 0)} ${first ? `Q${x0},${yt + bar} ${x0},${yt + bar - rr} V${yt + rr} Q${x0},${yt} ${x0 + rr},${yt}` : `V${yt}`} Z`, fill: col }, sg);
+        if (w > 40) txt(sg, x0 + w / 2, cy + 4.5, pct(v), { "text-anchor": "middle", style: "fill:#fff", "font-weight": 650 });
+        hover(sg, () => `<b>${esc(m.name)}</b> · ${FRAMING} wording<br>${name}: <b>${pct(v)}</b> of ${r.n} matched answers`, m.key);
+        acc += v;
+      });
+      txt(g, R + 70, cy + 4.5, pct(M[m.key].alone), { "text-anchor": "middle", class: "ink", "font-weight": 650 });
+    }
+  }, top, rowH, tierH);
+  txt(svg, R + 70, 14, "right alone", { "text-anchor": "middle", class: "mut", "font-size": 11.5 });
+  [0, .5].forEach(v => txt(svg, x(v), 14, pct(v), { "text-anchor": "middle", class: "mut" }));
+  txt(svg, x(1), 14, "100%", { "text-anchor": "end", class: "mut" });
+  svg.setAttribute("viewBox", `0 0 ${W} ${H + 4}`);
+  mount("lG1", svg);
+  const leak = D.models.filter(m => F(m).slip_m > .4).map(m => esc(m.name)), think = D.models.filter(m => m.tier === "thinking");
+  document.getElementById("lT1").innerHTML = `The right answer collapses: models that get ${pct(Math.min(...D.models.map(m => m.alone)))}–${pct(Math.max(...D.models.map(m => m.alone)))} of these questions right on their own now give the <mark class="slip">correct answer</mark> far less often.
+    ${leak.length ? `But ${leak.join(" and ")} still leak it in ${pct(Math.min(...D.models.filter(m => F(m).slip_m > .4).map(m => F(m).slip_m)))} or more of their "confused" answers. ` : ""}
+    With thinking, the leak almost disappears (${think.map(m => pct(F(m).slip_m)).join(" and ")}). What's left is the <mark class="other">wrong mistake</mark>: even the best models land on a different wrong option about ${pct(Math.min(...think.map(m => F(m).other_m)))} of the time.
+    So the ceiling isn't knowledge leaking out. It's following the faulty rule all the way to the right wrong answer.`;
+}
+
+// ---------- LLM G2: thinking flow ----------
+const OUTS = [["hit", "intended mistake", "var(--s1)"], ["wrong_stupid", "other wrong", "var(--s3)"], ["slip", "correct answer", "var(--s2)"], ["invalid", "no answer", "var(--none)"]];
+function flow(id, links) {
+  const W = 520, H = 330, nw = 14, gap = 10, top = 26, xa = 150, xb = W - 150;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H + 10}`, width: "100%", role: "img", "aria-label": "Outcome flow without vs with thinking" });
+  const tot = links.reduce((s, l) => s + l.n, 0), keys = OUTS.filter(([k]) => links.some(l => (l.from === k || l.to === k) && l.n > 0));
+  const scale = (H - top - gap * (keys.length - 1)) / tot;
+  const side = f => { let y = top; const pos = {}; keys.forEach(([k]) => { const n = links.filter(l => l[f] === k).reduce((s, l) => s + l.n, 0); pos[k] = { y, h: n * scale, n, off: 0 }; y += n * scale + gap; }); return pos; };
+  const A = side("from"), B = side("to");
+  txt(svg, xa + nw / 2, 14, "thinking off", { "text-anchor": "middle", class: "ink", "font-weight": 650 });
+  txt(svg, xb + nw / 2, 14, "thinking on", { "text-anchor": "middle", class: "ink", "font-weight": 650 });
+  const order = [...links].sort((p, q) => keys.findIndex(k => k[0] === p.from) - keys.findIndex(k => k[0] === q.from) || keys.findIndex(k => k[0] === p.to) - keys.findIndex(k => k[0] === q.to));
+  order.forEach(l => {
+    if (!l.n) return;
+    const h = l.n * scale, ya = A[l.from].y + A[l.from].off, yb = B[l.to].y + B[l.to].off; A[l.from].off += h; B[l.to].off += h;
+    const col = OUTS.find(o => o[0] === l.to)[2], x0 = xa + nw, x1 = xb, mx = (x0 + x1) / 2;
+    const p = el("path", { d: `M${x0},${ya} C${mx},${ya} ${mx},${yb} ${x1},${yb} L${x1},${yb + h} C${mx},${yb + h} ${mx},${ya + h} ${x0},${ya + h} Z`, fill: col, "fill-opacity": l.from === l.to ? .22 : .5 }, svg);
+    const nameA = OUTS.find(o => o[0] === l.from)[1], nameB = OUTS.find(o => o[0] === l.to)[1];
+    p.addEventListener("pointerenter", e => { p.setAttribute("fill-opacity", .85); showTip(e, l.from === l.to ? `<b>${l.n}</b> answers stayed on <b>${nameA}</b>` : `<b>${l.n}</b> answers moved from <b>${nameA}</b> to <b>${nameB}</b>`); });
+    p.addEventListener("pointermove", moveTip);
+    p.addEventListener("pointerleave", () => { p.setAttribute("fill-opacity", l.from === l.to ? .22 : .5); hideTip(); });
+  });
+  [[A, xa, "end", -8], [B, xb, "start", nw + 8]].forEach(([S, xx, anchor, dx]) => keys.forEach(([k, name, col]) => {
+    const s = S[k]; if (!s.n) return;
+    el("rect", { x: xx, y: s.y, width: nw, height: Math.max(1, s.h), rx: 3, fill: col }, svg);
+    txt(svg, xx + dx, s.y + s.h / 2 + 4, `${name} ${s.n}`, { "text-anchor": anchor, class: "ink", "font-size": 12 });
+  }));
+  mount(id, svg);
+}
+function lG2() {
+  flow("lG2a", D.flows.matched); flow("lG2b", D.flows.mismatched);
+  const f = D.flows.matched, into = f.filter(l => l.to === "hit" && l.from !== "hit").reduce((s, l) => s + l.n, 0), out = f.filter(l => l.from === "hit" && l.to !== "hit").reduce((s, l) => s + l.n, 0);
+  const tot = f.reduce((s, l) => s + l.n, 0);
+  const c = D.flows.mismatched, cin = c.filter(l => l.to === "slip" && l.from !== "slip").reduce((s, l) => s + l.n, 0), cout = c.filter(l => l.from === "slip" && l.to !== "slip").reduce((s, l) => s + l.n, 0);
+  document.getElementById("lT2").innerHTML = `Of ${tot} matched answers, <mark class="hit">${into} moved into the intended mistake</mark> when thinking was switched on, and only ${out} moved out of it.
+    That's lopsided far beyond chance. On the right, with an unrelated belief, ${cin} answers moved <i>back</i> to the <mark class="slip">correct answer</mark> and ${cout} moved away.
+    Thinking doesn't make the model generally worse at maths. It gives it room to actually <i>run</i> the wrong rule, and to notice when the rule doesn't apply.`;
+}
+
+// ---------- LLM G3: over-acting ----------
+function lG3() {
+  const W = 960, L = 210, R = 860, rowH = 32, tierH = 24, top = 30;
+  const svg = el("svg", { viewBox: `0 0 ${W} 10`, width: "100%", role: "img", "aria-label": "Correct alone vs with unrelated misconception" });
+  const x = v => L + (v - .2) / .8 * (R - L);
+  const H = rowsByTier({
+    tier: (t, name, y) => { txt(svg, 0, y + 16, name, { class: "tierlab" }); el("line", { x1: 0, x2: W, y1: y + 22, y2: y + 22, stroke: "var(--grid)" }, svg); },
+    row: (m, cy) => {
+      const r = F(m), a = M[m.key].alone, g = el("g", { "data-m": m.key }, svg);
+      el("rect", { x: 0, y: cy - rowH / 2, width: W, height: rowH, fill: "transparent" }, g);
+      txt(g, 14, cy + 4.5, m.name, { class: "ink", "font-weight": 600, "font-size": 13.5 });
+      el("line", { x1: x(r.correct_c), x2: x(a), y1: cy, y2: cy, stroke: "var(--s2)", "stroke-width": 2.5, "stroke-opacity": .5 }, g);
+      el("circle", { cx: x(a), cy, r: 6, fill: "var(--muted)", stroke: "var(--surface-1)", "stroke-width": 2 }, g);
+      shape(g, m.tier, x(r.correct_c), cy, 7, { fill: "var(--s2)", stroke: "var(--surface-1)", "stroke-width": 2 });
+      const d = r.correct_c - a;
+      txt(g, x(r.correct_c) - 14, cy + 4.5, pts(d), { "text-anchor": "end", class: "ink", "font-weight": 650 });
+      hover(g, () => `<b>${esc(m.name)}</b> · ${FRAMING} wording<br>Correct with no persona: <b>${pct(a)}</b><br>Correct with an unrelated belief: <b>${pct(r.correct_c)}</b> (${pct(r.ci_correct_c[0])}–${pct(r.ci_correct_c[1])})<br>Drop: ${pts(d)} pts`, m.key);
+    }
+  }, top, rowH, tierH);
+  grid(svg, x, [.2, .4, .6, .8, 1], top - 8, H, pct, 14);
+  svg.setAttribute("viewBox", `0 0 ${W} ${H + 4}`);
+  mount("lG3", svg);
+  const drop = m => M[m.key].alone - F(m).correct_c;
+  const over = D.models.filter(m => drop(m) > OVER).sort((a, b) => drop(b) - drop(a)), calm = D.models.filter(m => drop(m) <= OVER);
+  const t = M["gpt-5.4-think"], g5 = M["gpt-5.4"];
+  document.getElementById("lT3").innerHTML = `With the ${FRAMING} wording, ${calm.length} of ${D.models.length} models lose ${Math.round(OVER * 100)} points or less when handed an irrelevant misconception: they stay confused <i>only where told</i>.
+    ${over.length ? `${over.map(m => `${esc(m.name)} (<mark class="slip">${pts(-drop(m))}</mark>)`).join(", ")} ${over.length > 1 ? "don't" : "doesn't"}. Asked to imagine a confused student, ${over.length > 1 ? "they imagine" : "it imagines"} one who's confused about everything. ` : ""}
+    ${t && g5 ? `Thinking shrinks the damage for GPT-5.4 (${pts(-drop(g5))} → ${pts(-drop(t))} points).` : ""}
+    ${FRAMING === "student" ? "Switch to <b>teacher</b> wording at the top: it gets much worse." : "The <b>student</b> wording is clearly the safer one."}`;
+}
+
+// ---------- LLM deep dive ----------
+function lD1() {
+  const W = 960, L = 210, R = 860, rowH = 30, tierH = 24, top = 30, bar = 16;
+  const svg = el("svg", { viewBox: `0 0 ${W} 10`, width: "100%", role: "img", "aria-label": "Share of misses that are the correct answer" });
+  const x = v => L + v * (R - L);
+  const H = rowsByTier({
+    tier: (t, name, y) => { txt(svg, 0, y + 16, name, { class: "tierlab" }); el("line", { x1: 0, x2: W, y1: y + 22, y2: y + 22, stroke: "var(--grid)" }, svg); },
+    row: (m, cy) => {
+      const r = F(m), g = el("g", { "data-m": m.key }, svg), v = r.truth_share ?? 0, x1 = x(v), yt = cy - bar / 2, rr = 4;
+      txt(g, 14, cy + 4.5, m.name, { class: "ink", "font-weight": 600, "font-size": 13.5 });
+      el("path", { d: `M${L},${yt} H${x1 - rr} Q${x1},${yt} ${x1},${yt + rr} V${yt + bar - rr} Q${x1},${yt + bar} ${x1 - rr},${yt + bar} H${L} Z`, fill: "var(--s2)" }, g);
+      txt(g, x1 + 8, cy + 4.5, pct(v), { class: "ink", "font-weight": 650 });
+      hover(g, () => `<b>${esc(m.name)}</b> · ${FRAMING}<br>${r.misses} misses; <b>${pct(v)}</b> of them were the correct answer<br>(no pull at all: about 33%)`, m.key);
+    }
+  }, top, rowH, tierH);
+  el("line", { x1: x(1 / 3), x2: x(1 / 3), y1: top - 8, y2: H, stroke: "var(--text-primary)", "stroke-width": 1.5, "stroke-dasharray": "4 4" }, svg);
+  txt(svg, x(1 / 3) + 5, top - 12, "no pull (1 in 3)", { class: "ink", "font-size": 11.5 });
+  [0, .5, 1].forEach(v => txt(svg, x(v), 14, pct(v), { "text-anchor": "middle", class: "mut" }));
+  svg.setAttribute("viewBox", `0 0 ${W} ${H + 4}`);
+  mount("lD1", svg);
+}
+function lD2() {
+  const W = 960, H = 300, L = 60, R = 860, T = 20, B = 250, bins = D.natural, n = bins.length;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Hit and correct by option temptation" });
+  const x = i => L + (i + .5) * (R - L) / n, y = v => B - v / .7 * (B - T);
+  [0, .2, .4, .6].forEach(v => { el("line", { x1: L, x2: R, y1: y(v), y2: y(v), stroke: "var(--grid)" }, svg); txt(svg, L - 8, y(v) + 4, pct(v), { "text-anchor": "end", class: "mut" }); });
+  [["hit", "var(--s1)", "intended mistake"], ["slip", "var(--s2)", "correct answer"]].forEach(([k, col, name]) => {
+    el("polyline", { points: bins.map((b, i) => `${x(i)},${y(b[k])}`).join(" "), fill: "none", stroke: col, "stroke-width": 2.5, "stroke-linejoin": "round" }, svg);
+    bins.forEach((b, i) => { const g = el("g", {}, svg); el("circle", { cx: x(i), cy: y(b[k]), r: 14, fill: "transparent" }, g);
+      el("circle", { cx: x(i), cy: y(b[k]), r: 5.5, fill: col, stroke: "var(--surface-1)", "stroke-width": 2 }, g);
+      txt(g, x(i) + 10, y(b[k]) - 8, pct(b[k]), { class: "ink", "font-size": 12, "font-weight": 600 });
+      hover(g, `Control personas picked it: <b>${b.bin}</b><br>${name}: <b>${pct(b[k])}</b><br>${b.pairs} pairs, ${b.n.toLocaleString()} matched answers`); });
+  });
+  bins.forEach((b, i) => { txt(svg, x(i), B + 20, b.bin, { "text-anchor": "middle", class: "ink" }); txt(svg, x(i), B + 36, `${b.pairs} pairs`, { "text-anchor": "middle", class: "mut", "font-size": 11.5 }); });
+  mount("lD2", svg);
+}
+function lD3() {
+  const A = D.agreement, hs = A.hist, W = 960, H = 260, L = 50, R = 940, T = 16, B = 215;
+  document.getElementById("tries").textContent = A.tries;
+  const mx = Math.max(...hs.map(h => Math.max(h.hits, h.slips)));
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Agreement across models" });
+  const slot = (R - L) / hs.length, bw = Math.min(18, slot / 2 - 3), y = v => B - v / mx * (B - T), step = mx > 80 ? 20 : 10;
+  for (let v = 0; v <= mx; v += step) { el("line", { x1: L, x2: R, y1: y(v), y2: y(v), stroke: "var(--grid)" }, svg); txt(svg, L - 6, y(v) + 4, v, { "text-anchor": "end", class: "mut" }); }
+  hs.forEach((h, i) => {
+    const cx = L + slot * i + slot / 2;
+    [["hits", "var(--s1)", -1, "got the intended mistake"], ["slips", "var(--s2)", 1, "got the correct answer"]].forEach(([k, col, sd, name]) => {
+      const x0 = sd < 0 ? cx - bw - 1 : cx + 1, v = h[k], yt = y(v), r = Math.min(4, B - yt), g = el("g", {}, svg);
+      el("rect", { x: x0 - 2, y: T, width: bw + 4, height: B - T, fill: "transparent" }, g);
+      if (v > 0) el("path", { d: `M${x0},${B} V${yt + r} Q${x0},${yt} ${x0 + r},${yt} H${x0 + bw - r} Q${x0 + bw},${yt} ${x0 + bw},${yt + r} V${B} Z`, fill: col }, g);
+      hover(g, `<b>${v}</b> pairs ${name} in exactly <b>${h.k}</b> of ${A.tries} tries`);
+    });
+    txt(svg, cx, B + 18, h.k, { "text-anchor": "middle", class: "mut" });
+  });
+  txt(svg, (L + R) / 2, H - 4, `number of tries (out of ${A.tries}) with that outcome`, { "text-anchor": "middle", class: "mut" });
+  mount("lD3", svg);
+}
+
+// ---------- wiring ----------
+function drawAll() { eG1(); eG2(); eG3(); eD1(); eD2(); eD3(); eD4(); lG1(); lG2(); lG3(); lD1(); lD2(); lD3(); drawEx(); }
+document.querySelectorAll(".fr-toggle").forEach(box => FR.forEach(f => {
+  const b = document.createElement("button"); b.textContent = f === "student" ? "student: “you are a student who…”" : "teacher: “a student believes…, predict”";
+  b.dataset.f = f; b.setAttribute("aria-pressed", f === FRAMING);
+  b.onclick = () => { FRAMING = f; document.querySelectorAll(".fr-toggle button").forEach(x => x.setAttribute("aria-pressed", x.dataset.f === f)); drawAll(); };
+  box.appendChild(b);
+}));
+drawAll();
+if (location.search.includes("open")) document.querySelectorAll("details").forEach(d => d.open = true);
+</script>
+</body>
+</html>

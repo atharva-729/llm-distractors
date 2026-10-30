@@ -1,0 +1,167 @@
+# Single source of truth for paths, seeds, models and sample sizes.
+
+seed: 42
+
+paths:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  results_dir: results
+  cache_dir: cache
+
+data:
+  kaggle_competition: eedi-mining-misconceptions-in-mathematics
+  # Questions whose text or options contain markdown image placeholders "![alt]()"
+  # depend on a figure the model can't see. Set false to keep them.
+  drop_image_questions: true
+  # Minimum number of distinct questions a misconception must appear in
+  # to be used in the consistency test.
+  consistency_min_questions: 3
+  # Phase 2 junk-swap holdout: questions with all 3 distractors tagged.
+  # Never used for prompt tuning (excluded from the pilot).
+  holdout_questions: 100
+
+# API endpoints. Secrets are read from .env, never stored here.
+# All routes are OpenAI-compatible; `path` swaps the route on the Foundry host.
+providers:
+  foundry_openai:
+    base_url_env: FOUNDRY_BASE_URL
+    api_key_env: FOUNDRY_TOKEN
+  foundry_anthropic:
+    base_url_env: FOUNDRY_BASE_URL
+    api_key_env: FOUNDRY_TOKEN
+    path: /anthropic/v1
+  foundry_gemini:
+    base_url_env: FOUNDRY_BASE_URL
+    api_key_env: FOUNDRY_TOKEN
+    path: /gemini/v1beta/openai
+  foundry_groq:
+    base_url_env: FOUNDRY_BASE_URL
+    api_key_env: FOUNDRY_TOKEN
+    path: /groq/openai/v1
+
+# Prices are USD per 1M tokens, public list prices (assumption: Foundry passes
+# them through). Used for estimates and the daily spend guard.
+models:
+  gpt-4o-mini:
+    provider: foundry_openai
+    model: gpt-4o-mini
+    temperature: 0
+    reasoning: false
+    price_per_m: {input: 0.15, output: 0.60}
+  gpt-4.1-mini:
+    provider: foundry_openai
+    model: gpt-4.1-mini
+    temperature: 0
+    reasoning: false
+    price_per_m: {input: 0.40, output: 1.60}
+  claude-haiku-4-5:
+    provider: foundry_anthropic
+    model: claude-haiku-4-5
+    temperature: 0
+    reasoning: false
+    est_schema_tokens: 170   # measured: structured output adds ~170 input tokens on Claude
+    price_per_m: {input: 1.00, output: 5.00}
+  gemini-2.5-flash-lite:
+    provider: foundry_gemini
+    model: gemini-2.5-flash-lite
+    temperature: 0
+    reasoning: false
+    price_per_m: {input: 0.10, output: 0.40}
+  gpt-5-mini:
+    provider: foundry_openai
+    model: gpt-5-mini
+    # Reasoning model: no temperature; minimal effort keeps hidden tokens ~0.
+    reasoning: true
+    max_tokens_param: max_completion_tokens
+    min_max_tokens: 300
+    extra_params: {reasoning_effort: minimal}
+    price_per_m: {input: 0.25, output: 2.00}
+  # Larger models for the sample stage (2026-10-29). No visible thinking, same prompts.
+  gpt-5.4:
+    provider: foundry_openai
+    model: gpt-5.4
+    # Reasoning model, but effort "none" = no hidden thinking (measured 11 output tokens),
+    # so labelled as not reasoning on the pages. No temperature.
+    reasoning: false
+    max_tokens_param: max_completion_tokens
+    min_max_tokens: 300
+    extra_params: {reasoning_effort: none}
+    price_per_m: {input: 2.50, output: 15.00}
+  gpt-5.4-think:
+    # Same model as gpt-5.4 with hidden reasoning on: isolates the effect of thinking.
+    # Reasoning tokens are billed as output and included in completion_tokens.
+    provider: foundry_openai
+    model: gpt-5.4
+    reasoning: true
+    max_tokens_param: max_completion_tokens
+    min_max_tokens: 8000      # room for reasoning
+    est_hidden_tokens: 300
+    extra_params: {reasoning_effort: low}
+    price_per_m: {input: 2.50, output: 15.00}
+  # Not run (2026-10-30): with the frozen prompt Sonnet's thinking is just the answer letter
+  # ("Reply with one letter only" applied to its thinking too), and Foundry's OpenAI route
+  # drops thinking when response_format is set. Kept for reference.
+  claude-sonnet-4-6-think:
+    # Same model as claude-sonnet-4-6 with extended thinking on (Anthropic's minimum
+    # budget, 1024). Thinking requires the default temperature, so no temperature 0.
+    provider: foundry_anthropic
+    model: claude-sonnet-4-6
+    reasoning: true
+    min_max_tokens: 3000      # must exceed the thinking budget
+    est_schema_tokens: 190
+    est_hidden_tokens: 300
+    extra_params: {extra_body: {thinking: {type: enabled, budget_tokens: 1024}}}
+    price_per_m: {input: 3.00, output: 15.00}
+  claude-sonnet-4-6:
+    provider: foundry_anthropic
+    model: claude-sonnet-4-6
+    temperature: 0
+    reasoning: false
+    est_schema_tokens: 190   # measured: ~354 input tokens per call vs ~160 on OpenAI
+    price_per_m: {input: 3.00, output: 15.00}
+  gemini-3.1-pro:
+    provider: foundry_gemini
+    model: gemini-3.1-pro-preview
+    # Always thinks (hidden; "minimal"/"none" rejected). "low" measured ~180 hidden
+    # tokens/call, same answers as default. Google advises its default temperature for Gemini 3.
+    reasoning: true
+    min_max_tokens: 4000      # room for hidden thinking (max seen ~1,100)
+    est_hidden_tokens: 200
+    extra_params: {reasoning_effort: low}
+    price_per_m: {input: 2.00, output: 12.00}
+
+# Be gentle with Foundry: sequential calls, a pause between them, a daily cap.
+rate_limit:
+  min_seconds_between_calls: 1.0
+  max_retries: 5
+budget:
+  # Summed across all models running in parallel.
+  daily_usd_cap: 25.00   # 2026-10-30: thinking runs (user: budget not a constraint today)
+  # Runs with more calls than this need --yes after reviewing the estimate.
+  confirm_above_calls: 300
+
+pilot:
+  model: gpt-4o-mini
+  n_pairs: 50            # one pair per question, excluding the holdout
+  framings: [student, teacher]
+  # Pilot 1 (2026-10-29): batched agreed with single only 64% of the time,
+  # so the leaderboard uses single calls. "batched" is still supported.
+  modes: [single]
+  batch_size: 10
+
+# Prompts are frozen from here on (README 1d).
+full:
+  models: [gpt-4o-mini, gpt-4.1-mini, claude-haiku-4-5, gemini-2.5-flash-lite, gpt-5-mini]
+  framings: [student, teacher]
+  modes: [single]
+  batch_size: 10
+
+# Larger models on a prefix of the full run's pair order (same prompts and layouts).
+# Small models rerun this stage from the cache at no cost.
+sample:
+  models: [gpt-5.4, claude-sonnet-4-6, gemini-3.1-pro]
+  n_pairs: 500
+  n_pairs_by_model: {gemini-3.1-pro: 250, gpt-5.4-think: 250}   # hidden thinking costs ~4x per call
+  framings: [student, teacher]
+  modes: [single]
+  batch_size: 10

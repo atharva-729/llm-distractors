@@ -1,0 +1,126 @@
+{"question": "fractions", "model": "gpt-4o-mini", "condition": "none", "target": null, "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-4o-mini", "condition": "matched", "target": "A", "pick": "D", "raw": "{\"answer\":\"D\"}"}
+{"question": "fractions", "model": "gpt-4o-mini", "condition": "mismatched", "target": "A", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-4o-mini", "condition": "matched", "target": "C", "pick": "D", "raw": "{\"answer\":\"D\"}"}
+{"question": "fractions", "model": "gpt-4o-mini", "condition": "mismatched", "target": "C", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-4o-mini", "condition": "matched", "target": "D", "pick": "D", "raw": "{\"answer\":\"D\"}"}
+{"question": "fractions", "model": "gpt-4o-mini", "condition": "mismatched", "target": "D", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-4.1-mini", "condition": "none", "target": null, "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-4.1-mini", "condition": "matched", "target": "A", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "fractions", "model": "gpt-4.1-mini", "condition": "mismatched", "target": "A", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-4.1-mini", "condition": "matched", "target": "C", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "fractions", "model": "gpt-4.1-mini", "condition": "mismatched", "target": "C", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-4.1-mini", "condition": "matched", "target": "D", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "fractions", "model": "gpt-4.1-mini", "condition": "mismatched", "target": "D", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "claude-haiku-4-5", "condition": "none", "target": null, "pick": "B", "raw": "{\"answer\": \"B\"}"}
+{"question": "fractions", "model": "claude-haiku-4-5", "condition": "matched", "target": "A", "pick": "A", "raw": "{\"answer\": \"A\"}"}
+{"question": "fractions", "model": "claude-haiku-4-5", "condition": "mismatched", "target": "A", "pick": "B", "raw": "{\"answer\": \"B\"}"}
+{"question": "fractions", "model": "claude-haiku-4-5", "condition": "matched", "target": "C", "pick": "C", "raw": "{\"answer\": \"C\"}"}
+{"question": "fractions", "model": "claude-haiku-4-5", "condition": "mismatched", "target": "C", "pick": "B", "raw": "{\"answer\": \"B\"}"}
+{"question": "fractions", "model": "claude-haiku-4-5", "condition": "matched", "target": "D", "pick": "A", "raw": "{\"answer\": \"A\"}"}
+{"question": "fractions", "model": "claude-haiku-4-5", "condition": "mismatched", "target": "D", "pick": "B", "raw": "{\"answer\": \"B\"}"}
+{"question": "fractions", "model": "gemini-2.5-flash-lite", "condition": "none", "target": null, "pick": "B", "raw": "{\n  \"answer\": \"B"}
+{"question": "fractions", "model": "gemini-2.5-flash-lite", "condition": "matched", "target": "A", "pick": "A", "raw": "{\n  \"answer\": \"A"}
+{"question": "fractions", "model": "gemini-2.5-flash-lite", "condition": "mismatched", "target": "A", "pick": "A", "raw": "{\n  \"answer\": \"A"}
+{"question": "fractions", "model": "gemini-2.5-flash-lite", "condition": "matched", "target": "C", "pick": "B", "raw": "{\n  \"answer\": \"B"}
+{"question": "fractions", "model": "gemini-2.5-flash-lite", "condition": "mismatched", "target": "C", "pick": "A", "raw": "{\n  \"answer\": \"A"}
+{"question": "fractions", "model": "gemini-2.5-flash-lite", "condition": "matched", "target": "D", "pick": "A", "raw": "{\n  \"answer\": \"A"}
+{"question": "fractions", "model": "gemini-2.5-flash-lite", "condition": "mismatched", "target": "D", "pick": "A", "raw": "{\n  \"answer\": \"A"}
+{"question": "fractions", "model": "gpt-5-mini", "condition": "none", "target": null, "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-5-mini", "condition": "matched", "target": "A", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "fractions", "model": "gpt-5-mini", "condition": "mismatched", "target": "A", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-5-mini", "condition": "matched", "target": "C", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "fractions", "model": "gpt-5-mini", "condition": "mismatched", "target": "C", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-5-mini", "condition": "matched", "target": "D", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "fractions", "model": "gpt-5-mini", "condition": "mismatched", "target": "D", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-5.4", "condition": "none", "target": null, "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-5.4", "condition": "matched", "target": "A", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "fractions", "model": "gpt-5.4", "condition": "mismatched", "target": "A", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-5.4", "condition": "matched", "target": "C", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "fractions", "model": "gpt-5.4", "condition": "mismatched", "target": "C", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-5.4", "condition": "matched", "target": "D", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "fractions", "model": "gpt-5.4", "condition": "mismatched", "target": "D", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-5.4-think", "condition": "none", "target": null, "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-5.4-think", "condition": "matched", "target": "A", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "fractions", "model": "gpt-5.4-think", "condition": "mismatched", "target": "A", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-5.4-think", "condition": "matched", "target": "C", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "fractions", "model": "gpt-5.4-think", "condition": "mismatched", "target": "C", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gpt-5.4-think", "condition": "matched", "target": "D", "pick": "D", "raw": "{\"answer\":\"D\"}"}
+{"question": "fractions", "model": "gpt-5.4-think", "condition": "mismatched", "target": "D", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "claude-sonnet-4-6", "condition": "none", "target": null, "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "claude-sonnet-4-6", "condition": "matched", "target": "A", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "fractions", "model": "claude-sonnet-4-6", "condition": "mismatched", "target": "A", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "claude-sonnet-4-6", "condition": "matched", "target": "C", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "fractions", "model": "claude-sonnet-4-6", "condition": "mismatched", "target": "C", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "claude-sonnet-4-6", "condition": "matched", "target": "D", "pick": "D", "raw": "{\"answer\":\"D\"}"}
+{"question": "fractions", "model": "claude-sonnet-4-6", "condition": "mismatched", "target": "D", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "fractions", "model": "gemini-3.1-pro", "condition": "none", "target": null, "pick": "B", "raw": "{\n  \"answer\": \"B\"\n}"}
+{"question": "fractions", "model": "gemini-3.1-pro", "condition": "matched", "target": "A", "pick": "A", "raw": "{\n  \"answer\": \"A\"\n}"}
+{"question": "fractions", "model": "gemini-3.1-pro", "condition": "mismatched", "target": "A", "pick": "B", "raw": "{\n  \"answer\": \"B\"\n}"}
+{"question": "fractions", "model": "gemini-3.1-pro", "condition": "matched", "target": "C", "pick": "C", "raw": "{\n  \"answer\": \"C\"\n}"}
+{"question": "fractions", "model": "gemini-3.1-pro", "condition": "mismatched", "target": "C", "pick": "B", "raw": "{\n  \"answer\": \"B\"\n}"}
+{"question": "fractions", "model": "gemini-3.1-pro", "condition": "matched", "target": "D", "pick": "D", "raw": "{\n  \"answer\": \"D\"\n}"}
+{"question": "fractions", "model": "gemini-3.1-pro", "condition": "mismatched", "target": "D", "pick": "B", "raw": "{\n  \"answer\": \"B\"\n}"}
+{"question": "order", "model": "gpt-4o-mini", "condition": "none", "target": null, "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-4o-mini", "condition": "matched", "target": "A", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "order", "model": "gpt-4o-mini", "condition": "mismatched", "target": "A", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-4o-mini", "condition": "matched", "target": "B", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "order", "model": "gpt-4o-mini", "condition": "mismatched", "target": "B", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-4o-mini", "condition": "matched", "target": "D", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "order", "model": "gpt-4o-mini", "condition": "mismatched", "target": "D", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-4.1-mini", "condition": "none", "target": null, "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-4.1-mini", "condition": "matched", "target": "A", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "order", "model": "gpt-4.1-mini", "condition": "mismatched", "target": "A", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "order", "model": "gpt-4.1-mini", "condition": "matched", "target": "B", "pick": "D", "raw": "{\"answer\":\"D\"}"}
+{"question": "order", "model": "gpt-4.1-mini", "condition": "mismatched", "target": "B", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "order", "model": "gpt-4.1-mini", "condition": "matched", "target": "D", "pick": "D", "raw": "{\"answer\":\"D\"}"}
+{"question": "order", "model": "gpt-4.1-mini", "condition": "mismatched", "target": "D", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "order", "model": "claude-haiku-4-5", "condition": "none", "target": null, "pick": "C", "raw": "{\"answer\": \"C\"}"}
+{"question": "order", "model": "claude-haiku-4-5", "condition": "matched", "target": "A", "pick": "A", "raw": "{\"answer\": \"A\"}"}
+{"question": "order", "model": "claude-haiku-4-5", "condition": "mismatched", "target": "A", "pick": "C", "raw": "{\"answer\": \"C\"}"}
+{"question": "order", "model": "claude-haiku-4-5", "condition": "matched", "target": "B", "pick": "A", "raw": "{\"answer\": \"A\"}"}
+{"question": "order", "model": "claude-haiku-4-5", "condition": "mismatched", "target": "B", "pick": "C", "raw": "{\"answer\": \"C\"}"}
+{"question": "order", "model": "claude-haiku-4-5", "condition": "matched", "target": "D", "pick": "D", "raw": "{\"answer\": \"D\"}"}
+{"question": "order", "model": "claude-haiku-4-5", "condition": "mismatched", "target": "D", "pick": "C", "raw": "{\"answer\": \"C\"}"}
+{"question": "order", "model": "gemini-2.5-flash-lite", "condition": "none", "target": null, "pick": "B", "raw": "{\n  \"answer\": \"B"}
+{"question": "order", "model": "gemini-2.5-flash-lite", "condition": "matched", "target": "A", "pick": "B", "raw": "{\n  \"answer\": \"B"}
+{"question": "order", "model": "gemini-2.5-flash-lite", "condition": "mismatched", "target": "A", "pick": "C", "raw": "{\n  \"answer\": \"C"}
+{"question": "order", "model": "gemini-2.5-flash-lite", "condition": "matched", "target": "B", "pick": "A", "raw": "{\n  \"answer\": \"A"}
+{"question": "order", "model": "gemini-2.5-flash-lite", "condition": "mismatched", "target": "B", "pick": "C", "raw": "{\n  \"answer\": \"C"}
+{"question": "order", "model": "gemini-2.5-flash-lite", "condition": "matched", "target": "D", "pick": "D", "raw": "{\n  \"answer\": \"D"}
+{"question": "order", "model": "gemini-2.5-flash-lite", "condition": "mismatched", "target": "D", "pick": "C", "raw": "{\n  \"answer\": \"C"}
+{"question": "order", "model": "gpt-5-mini", "condition": "none", "target": null, "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-5-mini", "condition": "matched", "target": "A", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-5-mini", "condition": "mismatched", "target": "A", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "order", "model": "gpt-5-mini", "condition": "matched", "target": "B", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-5-mini", "condition": "mismatched", "target": "B", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "order", "model": "gpt-5-mini", "condition": "matched", "target": "D", "pick": "D", "raw": "{\"answer\":\"D\"}"}
+{"question": "order", "model": "gpt-5-mini", "condition": "mismatched", "target": "D", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "order", "model": "gpt-5.4", "condition": "none", "target": null, "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-5.4", "condition": "matched", "target": "A", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-5.4", "condition": "mismatched", "target": "A", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-5.4", "condition": "matched", "target": "B", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-5.4", "condition": "mismatched", "target": "B", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-5.4", "condition": "matched", "target": "D", "pick": "D", "raw": "{\"answer\":\"D\"}"}
+{"question": "order", "model": "gpt-5.4", "condition": "mismatched", "target": "D", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-5.4-think", "condition": "none", "target": null, "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-5.4-think", "condition": "matched", "target": "A", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "order", "model": "gpt-5.4-think", "condition": "mismatched", "target": "A", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-5.4-think", "condition": "matched", "target": "B", "pick": "B", "raw": "{\"answer\":\"B\"}"}
+{"question": "order", "model": "gpt-5.4-think", "condition": "mismatched", "target": "B", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gpt-5.4-think", "condition": "matched", "target": "D", "pick": "D", "raw": "{\"answer\":\"D\"}"}
+{"question": "order", "model": "gpt-5.4-think", "condition": "mismatched", "target": "D", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "claude-sonnet-4-6", "condition": "none", "target": null, "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "claude-sonnet-4-6", "condition": "matched", "target": "A", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "order", "model": "claude-sonnet-4-6", "condition": "mismatched", "target": "A", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "claude-sonnet-4-6", "condition": "matched", "target": "B", "pick": "A", "raw": "{\"answer\":\"A\"}"}
+{"question": "order", "model": "claude-sonnet-4-6", "condition": "mismatched", "target": "B", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "claude-sonnet-4-6", "condition": "matched", "target": "D", "pick": "D", "raw": "{\"answer\":\"D\"}"}
+{"question": "order", "model": "claude-sonnet-4-6", "condition": "mismatched", "target": "D", "pick": "C", "raw": "{\"answer\":\"C\"}"}
+{"question": "order", "model": "gemini-3.1-pro", "condition": "none", "target": null, "pick": "C", "raw": "{\n  \"answer\": \"C\"\n}"}
+{"question": "order", "model": "gemini-3.1-pro", "condition": "matched", "target": "A", "pick": "A", "raw": "{\n  \"answer\": \"A\"\n}"}
+{"question": "order", "model": "gemini-3.1-pro", "condition": "mismatched", "target": "A", "pick": "C", "raw": "{\n  \"answer\": \"C\"\n}"}
+{"question": "order", "model": "gemini-3.1-pro", "condition": "matched", "target": "B", "pick": "B", "raw": "{\n  \"answer\": \"B\"\n}"}
+{"question": "order", "model": "gemini-3.1-pro", "condition": "mismatched", "target": "B", "pick": "C", "raw": "{\n  \"answer\": \"C\"\n}"}
+{"question": "order", "model": "gemini-3.1-pro", "condition": "matched", "target": "D", "pick": "D", "raw": "{\n  \"answer\": \"D\"\n}"}
+{"question": "order", "model": "gemini-3.1-pro", "condition": "mismatched", "target": "D", "pick": "C", "raw": "{\n  \"answer\": \"C\"\n}"}

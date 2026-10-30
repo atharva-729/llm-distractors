@@ -1,0 +1,5 @@
+pandas
+pyyaml
+python-dotenv
+openai
+kaggle

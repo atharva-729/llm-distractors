@@ -1,0 +1,20 @@
+# secrets
+.env
+
+# data (Kaggle files are not ours to redistribute)
+data/raw/
+# processed data holds full question text, see LICENSE_NOTES.md
+data/processed/
+
+# LLM response cache
+cache/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# local reports embed Eedi question text (see LICENSE_NOTES.md)
+reports/
