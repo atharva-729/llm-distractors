@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confused on Purpose: Phase 1 results</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+.viz-root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface-1: #fcfcfb;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --none: #c3c2b7;
+  --neutral: #f0efec; --neg: #e34948;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface-1: #1a1a19;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --none: #52514e;
+    --neutral: #383835; --neg: #e66767;
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface-1: #1a1a19;
+  --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --none: #52514e;
+  --neutral: #383835; --neg: #e66767;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.viz-root { background: var(--page); color: var(--text-primary); min-height: 100vh;
+  font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 980px; margin: 0 auto; padding: 32px 20px 80px; }
+h1 { font-size: 28px; margin: 0 0 6px; font-weight: 650; }
+h2 { font-size: 20px; margin: 48px 0 6px; font-weight: 620; }
+h3 { font-size: 15px; margin: 0 0 4px; font-weight: 620; }
+p { margin: 6px 0 12px; }
+.sub { color: var(--text-secondary); }
+.muted { color: var(--muted); }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin: 14px 0; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin: 18px 0; }
+.tile .label { color: var(--text-secondary); font-size: 13px; }
+.tile .value { font-size: 34px; font-weight: 620; line-height: 1.2; }
+.tile.hero .value { font-size: 52px; }
+.tile .note { color: var(--muted); font-size: 13px; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--text-secondary); margin: 6px 0 4px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.seg button, .btn { background: var(--surface-1); color: var(--text-primary); border: 0; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--border); }
+.seg button[aria-pressed="true"] { background: var(--text-primary); color: var(--surface-1); }
+.btn { border: 1px solid var(--border); border-radius: 8px; }
+select { font: inherit; font-size: 13px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary); }
+svg text { fill: var(--text-secondary); font-size: 12px; }
+svg .ink { fill: var(--text-primary); }
+svg .mut { fill: var(--muted); }
+details { margin-top: 10px; font-size: 13px; }
+summary { cursor: pointer; color: var(--text-secondary); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); }
+th { color: var(--text-secondary); font-weight: 560; }
+td.num, th.num { text-align: right; }
+.heat td.cell { text-align: center; border: 2px solid var(--surface-1); border-radius: 4px; }
+#tip { position: fixed; pointer-events: none; background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border);
+  box-shadow: 0 4px 14px rgba(0,0,0,.12); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; max-width: 320px; display: none; z-index: 10; }
+.qtext { white-space: pre-wrap; font-size: 15.5px; margin: 10px 0 14px; }
+.opt { display: grid; grid-template-columns: 28px 1fr; gap: 8px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); margin: 6px 0; }
+.opt .L { font-weight: 650; }
+.badge { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--border); color: var(--text-secondary); margin: 2px 4px 2px 0; }
+.badge.correct { border-color: var(--s3); }
+.badge.target { border-color: var(--s1); }
+.mc { font-size: 12.5px; color: var(--text-secondary); margin-top: 2px; }
+.persona { font-size: 13.5px; margin: 4px 0; }
+.ans td { vertical-align: top; }
+.chip { display: inline-flex; align-items: center; gap: 6px; }
+.chip b { font-size: 14px; }
+.raw { font-family: ui-monospace, Consolas, monospace; font-size: 11.5px; color: var(--muted); }
+.theme { position: absolute; top: 16px; right: 20px; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+<div class="theme seg" role="group" aria-label="Theme">
+  <button data-theme-set="light">Light</button><button data-theme-set="dark">Dark</button>
+</div>
+<main>
+  <h1>Can LLMs be confused on purpose?</h1>
+  <p class="sub" id="subtitle"></p>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="card">
+    <h3>How to read this page</h3>
+    <p>Each test item is a <b>pair</b>: one Eedi question, plus one wrong option (a <b>distractor</b>) that Eedi tagged with a <b>misconception</b>.
+    Example: for <i>1/2 + 1/3</i>, the distractor <i>2/5</i> is tagged "adds numerators and adds denominators".</p>
+    <p>We ask each model the question three ways:</p>
+    <ul>
+      <li><b>Matched persona</b>: "You are a student who believes <i>[that misconception]</i>". Picking the tagged distractor is a <b>hit</b>.</li>
+      <li><b>Control persona</b>: the same question, but the student believes an <i>unrelated</i> misconception. A hit here means the distractor is just tempting.</li>
+      <li><b>No persona</b>: just answer. This checks whether the model can solve the question at all.</li>
+    </ul>
+    <p><b>Lift = matched hit rate − control hit rate.</b> This is the headline number: how much the <i>specific</i> misconception steers the answer.
+    Each persona call uses one of two <b>framings</b>: <i>student</i> ("you are a student who…") or <i>teacher</i> ("a student believes…; predict their pick").</p>
+  </div>
+
+  <h2>1 · Leaderboard: matched vs control</h2>
+  <p class="sub">The gap between the hollow dot (control) and the filled dot (matched persona) is the lift. Further right means the model picks the tagged distractor more often.</p>
+  <div class="legend">
+    <span><span class="dot" style="border:2px solid var(--muted)"></span>Control persona</span>
+    <span><span class="dot" style="background:var(--s1)"></span>Matched, student framing</span>
+    <span><span class="dot" style="background:var(--s2)"></span>Matched, teacher framing</span>
+  </div>
+  <div class="card"><div id="dumbbell"></div>
+    <details><summary>Show as table</summary><div id="lbTable"></div></details></div>
+
+  <h2>2 · When the persona misses, how does it miss?</h2>
+  <p class="sub">Matched personas only. A <b>slip</b> means the model gave the right answer anyway (its own knowledge won). <b>Other wrong</b> means it picked a different distractor.</p>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--s1)"></span>Hit (tagged distractor)</span>
+    <span><span class="sw" style="background:var(--s2)"></span>Slip (correct answer)</span>
+    <span><span class="sw" style="background:var(--s3)"></span>Other wrong option</span>
+    <span><span class="sw" style="background:var(--none)"></span>Invalid reply</span>
+  </div>
+  <div class="card"><div id="stack"></div>
+    <details><summary>Show as table</summary><div id="mixTable"></div></details></div>
+
+  <h2>3 · Consistency: does a persona hit across questions?</h2>
+  <p class="sub">For misconceptions tagged on 3 or more questions: what share of those questions the matched persona hits. A reliable persona piles up on the right.</p>
+  <div class="controls"><span class="muted">Framing</span><div class="seg" id="consFraming"></div></div>
+  <div class="grid2" id="cons"></div>
+
+  <h2>4 · Lift by subject</h2>
+  <p class="sub">The largest subjects by number of pairs. Blue means positive lift and red means negative; the number in each cell is the lift in percentage points.</p>
+  <div class="controls"><span class="muted">Framing</span><div class="seg" id="subjFraming"></div></div>
+  <div class="card" style="overflow-x:auto"><div id="subj"></div></div>
+
+  <h2>5 · Examples: the actual answers</h2>
+  <p class="sub">Every model's real reply to one question. Models saw the options in shuffled order; the letters below are mapped back to the original order. Hover a cell to see the raw reply.</p>
+  <div class="controls">
+    <select id="exFilter"></select>
+    <button class="btn" id="exPrev">◀ Prev</button>
+    <button class="btn" id="exNext">Next ▶</button>
+    <button class="btn" id="exRand">Random</button>
+    <span class="muted" id="exPos"></span>
+  </div>
+  <div class="card" id="example"></div>
+
+  <h2>Method & caveats</h2>
+  <div class="card">
+    <ul>
+      <li>Data: Eedi "Mining Misconceptions in Mathematics" (Kaggle, CC BY-NC 4.0, non-commercial). Image-based questions are excluded. <b>This page contains competition data and is for local viewing only.</b></li>
+      <li>Eedi's misconception tags are treated as ground truth. Some are noisy, which caps the achievable hit rate.</li>
+      <li>Options are shuffled for every call (seeded). The tagged distractor's position is balanced across A–D, and matched and control calls for a pair use the same option order, so position bias cancels out of the lift.</li>
+      <li>Single calls only. Replies are constrained to <code>{"answer": "A|B|C|D"}</code>, the same method for every model. Temperature is 0 where supported; gpt-5-mini runs at minimal reasoning effort.</li>
+      <li>LLM personas are not real students. Nothing here is validated against real student response rates.</li>
+    </ul>
+  </div>
+</main>
+<div id="tip"></div>
+</div>
+
+<script>
+const D = /*__DATA__*/null;
+const FR = ["student", "teacher"];
+const FCOL = { student: "var(--s1)", teacher: "var(--s2)" };
+const pct = v => (v == null || isNaN(v)) ? "–" : Math.round(v * 100) + "%";
+const pts = v => (v == null || isNaN(v)) ? "–" : (v >= 0 ? "+" : "−") + Math.abs(Math.round(v * 100));
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const tip = document.getElementById("tip");
+function showTip(ev, html) { tip.innerHTML = html; tip.style.display = "block"; moveTip(ev); }
+function moveTip(ev) {
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + w > innerWidth - 8) x = ev.clientX - w - 14;
+  if (y + h > innerHeight - 8) y = ev.clientY - h - 14;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function hideTip() { tip.style.display = "none"; }
+function hover(node, html) {
+  node.addEventListener("pointerenter", e => showTip(e, html));
+  node.addEventListener("pointermove", moveTip);
+  node.addEventListener("pointerleave", hideTip);
+}
+const lb = (m, f) => D.leaderboard.find(r => r.model === m && r.framing === f);
+const label = m => m + (D.reasoning[m] ? " (reasoning)" : "");
+
+// Theme toggle
+document.querySelectorAll("[data-theme-set]").forEach(b => b.onclick = () => {
+  document.documentElement.setAttribute("data-theme", b.dataset.themeSet);
+});
+
+// Header + tiles
+document.getElementById("subtitle").textContent =
+  `${D.counts.pairs.toLocaleString()} pairs from ${D.counts.questions.toLocaleString()} questions · ${D.models.length} models × 2 framings · stage: ${D.stage}`;
+(function tiles() {
+  const best = [...D.leaderboard].sort((a, b) => b.lift - a.lift)[0];
+  const solv = [...D.leaderboard].sort((a, b) => b.solvable_lift - a.solvable_lift)[0];
+  const t = document.getElementById("tiles");
+  t.innerHTML = `
+    <div class="card tile hero"><div class="label">Best lift</div><div class="value">${pts(best.lift)} pts</div>
+      <div class="note">${esc(best.model)}, ${best.framing} framing · matched ${pct(best.matched_hit_rate)} vs control ${pct(best.mismatched_hit_rate)}</div></div>
+    <div class="card tile"><div class="label">Best lift on questions the model can solve</div><div class="value">${pts(solv.solvable_lift)} pts</div>
+      <div class="note">${esc(solv.model)}, ${solv.framing} · ${solv.solvable_n} pairs</div></div>
+    <div class="card tile"><div class="label">Calls analysed</div><div class="value">${D.counts.rows.toLocaleString()}</div>
+      <div class="note">one model reply each</div></div>`;
+})();
+
+// 1. Dumbbell
+(function dumbbell() {
+  const W = 900, L = 230, R = 820, rowH = 26, gap = 14, top = 24;
+  const rows = [];
+  D.models.forEach(m => FR.forEach(f => { const r = lb(m, f); if (r) rows.push({ m, f, r }); }));
+  const H = top + D.models.length * (2 * rowH + gap) + 10;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Matched vs control hit rate by model and framing" });
+  const x = v => L + v * (R - L);
+  [0, .25, .5, .75, 1].forEach(v => {
+    el("line", { x1: x(v), x2: x(v), y1: top - 6, y2: H - 6, stroke: "var(--grid)", "stroke-width": 1 }, svg);
+    el("text", { x: x(v), y: 14, "text-anchor": "middle", class: "mut" }, svg).textContent = pct(v);
+  });
+  el("text", { x: R + 50, y: 14, "text-anchor": "middle", class: "mut" }, svg).textContent = "lift";
+  let y = top;
+  D.models.forEach(m => {
+    FR.forEach((f, i) => {
+      const r = lb(m, f); if (!r) return;
+      const cy = y + rowH / 2;
+      const g = el("g", {}, svg);
+      el("rect", { x: 0, y: y, width: W, height: rowH, fill: "transparent" }, g);
+      if (i === 0) el("text", { x: 0, y: cy + 4, class: "ink", "font-weight": 600 }, g).textContent = label(m);
+      el("text", { x: L - 12, y: cy + 4, "text-anchor": "end" }, g).textContent = f;
+      el("line", { x1: x(r.mismatched_hit_rate), x2: x(r.matched_hit_rate), y1: cy, y2: cy, stroke: FCOL[f], "stroke-width": 2, "stroke-linecap": "round" }, g);
+      el("circle", { cx: x(r.mismatched_hit_rate), cy, r: 5, fill: "var(--surface-1)", stroke: "var(--muted)", "stroke-width": 2 }, g);
+      el("circle", { cx: x(r.matched_hit_rate), cy, r: 6, fill: FCOL[f], stroke: "var(--surface-1)", "stroke-width": 2 }, g);
+      el("text", { x: R + 50, y: cy + 4, "text-anchor": "middle", class: "ink", "font-weight": 600 }, g).textContent = pts(r.lift);
+      hover(g, `<b>${esc(m)}</b> · ${f} framing<br>Matched hit: <b>${pct(r.matched_hit_rate)}</b><br>Control hit: ${pct(r.mismatched_hit_rate)}<br>Lift: <b>${pts(r.lift)} pts</b> (n=${r.matched_n})<br>On solvable questions: ${pts(r.solvable_lift)} pts (n=${r.solvable_n})<br>No-persona accuracy: ${pct(r.no_persona_accuracy)}`);
+      y += rowH;
+    });
+    y += gap;
+  });
+  document.getElementById("dumbbell").appendChild(svg);
+  document.getElementById("lbTable").innerHTML = `<table><tr><th>Model</th><th>Framing</th><th class="num">Pairs</th><th class="num">Matched hit</th><th class="num">Control hit</th><th class="num">Lift</th><th class="num">Lift (solvable)</th><th class="num">No-persona acc.</th></tr>` +
+    rows.map(({ m, f, r }) => `<tr><td>${esc(m)}</td><td>${f}</td><td class="num">${r.matched_n}</td><td class="num">${pct(r.matched_hit_rate)}</td><td class="num">${pct(r.mismatched_hit_rate)}</td><td class="num"><b>${pts(r.lift)}</b></td><td class="num">${pts(r.solvable_lift)} <span class="muted">(${r.solvable_n})</span></td><td class="num">${pct(r.no_persona_accuracy)}</td></tr>`).join("") + `</table>`;
+})();
+
+// 2. Stacked outcome bars
+(function stack() {
+  const W = 900, L = 230, R = 880, rowH = 26, gap = 14, top = 8, bar = 18;
+  const segs = [["hit", "var(--s1)", "Hit"], ["slip", "var(--s2)", "Slip"], ["wrong_stupid", "var(--s3)", "Other wrong"], ["invalid", "var(--none)", "Invalid"]];
+  const inkOn = { hit: "#ffffff", slip: "#ffffff", wrong_stupid: "#ffffff", invalid: "var(--text-primary)" };
+  const H = top + D.models.length * (2 * rowH + gap);
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Outcome mix for matched personas" });
+  const x = v => L + v * (R - L);
+  let y = top;
+  D.models.forEach(m => {
+    FR.forEach((f, i) => {
+      const r = D.mix.find(d => d.model === m && d.framing === f); if (!r) return;
+      const cy = y + rowH / 2;
+      if (i === 0) el("text", { x: 0, y: cy + 4, class: "ink", "font-weight": 600 }, svg).textContent = label(m);
+      el("text", { x: L - 12, y: cy + 4, "text-anchor": "end" }, svg).textContent = f;
+      let acc = 0;
+      const visible = segs.filter(s => r[s[0]] > 0);
+      visible.forEach(([k, col, name], j) => {
+        const v = r[k];
+        const x0 = x(acc) + (j ? 1 : 0), x1 = x(acc + v) - (j < visible.length - 1 ? 1 : 0);
+        const w = Math.max(0, x1 - x0);
+        const last = j === visible.length - 1;
+        const g = el("g", {}, svg);
+        if (last && w > 4) {
+          const rr = 4, yt = cy - bar / 2;
+          el("path", { d: `M${x0},${yt} H${x1 - rr} Q${x1},${yt} ${x1},${yt + rr} V${yt + bar - rr} Q${x1},${yt + bar} ${x1 - rr},${yt + bar} H${x0} Z`, fill: col }, g);
+        } else el("rect", { x: x0, y: cy - bar / 2, width: w, height: bar, fill: col }, g);
+        if (w > 38) el("text", { x: x0 + w / 2, y: cy + 4, "text-anchor": "middle", style: `fill:${inkOn[k]}`, "font-weight": 600 }, g).textContent = pct(v);
+        hover(g, `<b>${esc(m)}</b> · ${f}<br>${name}: <b>${pct(v)}</b> of ${r.n} matched pairs`);
+        acc += v;
+      });
+      y += rowH;
+    });
+    y += gap;
+  });
+  document.getElementById("stack").appendChild(svg);
+  document.getElementById("mixTable").innerHTML = `<table><tr><th>Model</th><th>Framing</th><th class="num">Hit</th><th class="num">Slip</th><th class="num">Other wrong</th><th class="num">Invalid</th></tr>` +
+    D.mix.map(r => `<tr><td>${esc(r.model)}</td><td>${r.framing}</td><td class="num">${pct(r.hit)}</td><td class="num">${pct(r.slip)}</td><td class="num">${pct(r.wrong_stupid)}</td><td class="num">${pct(r.invalid)}</td></tr>`).join("") + `</table>`;
+})();
+
+// Framing toggles
+function framingToggle(id, onChange) {
+  const box = document.getElementById(id);
+  let cur = "student";
+  FR.forEach(f => {
+    const b = document.createElement("button");
+    b.textContent = f; b.setAttribute("aria-pressed", f === cur);
+    b.onclick = () => { cur = f; box.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.textContent === f)); onChange(f); };
+    box.appendChild(b);
+  });
+  onChange(cur);
+}
+
+// 3. Consistency small multiples
+const BINS = [["0%", v => v === 0], ["1–33%", v => v > 0 && v <= 1 / 3 + 1e-9], ["34–66%", v => v > 1 / 3 + 1e-9 && v < 2 / 3 - 1e-9], ["67–99%", v => v >= 2 / 3 - 1e-9 && v < 1], ["100%", v => v === 1]];
+function drawCons(f) {
+  const box = document.getElementById("cons"); box.innerHTML = "";
+  const rows = D.consistency.filter(c => c.framing === f);
+  if (!rows.length) { box.innerHTML = `<p class="muted">No misconception appears in 3 or more questions in this sample.</p>`; return; }
+  const maxN = Math.max(1, ...rows.map(c => Math.max(...BINS.map(([, t]) => c.values.filter(t).length))));
+  D.models.forEach(m => {
+    const c = rows.find(r => r.model === m); if (!c) return;
+    const card = document.createElement("div"); card.className = "card";
+    card.innerHTML = `<h3>${esc(label(m))}</h3><div class="muted" style="font-size:12.5px">${c.n} misconceptions · median ${pct(c.median)} · always hit ${pct(c.always)} · never ${pct(c.never)}</div>`;
+    const W = 300, H = 150, B = 120, T = 18;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": `Consistency histogram for ${m}` });
+    el("line", { x1: 0, x2: W, y1: B, y2: B, stroke: "var(--axis)", "stroke-width": 1 }, svg);
+    const bw = 24, slot = W / BINS.length;
+    BINS.forEach(([name, t], i) => {
+      const n = c.values.filter(t).length;
+      const h = (B - T) * n / maxN, cx = slot * i + slot / 2, x0 = cx - bw / 2, yt = B - h;
+      const g = el("g", {}, svg);
+      el("rect", { x: slot * i, y: T - 14, width: slot, height: B - T + 14, fill: "transparent" }, g);
+      if (h > 0) {
+        const r = Math.min(4, h);
+        el("path", { d: `M${x0},${B} V${yt + r} Q${x0},${yt} ${x0 + r},${yt} H${x0 + bw - r} Q${x0 + bw},${yt} ${x0 + bw},${yt + r} V${B} Z`, fill: FCOL[f] }, g);
+      }
+      el("text", { x: cx, y: yt - 5, "text-anchor": "middle", class: "ink" }, g).textContent = n;
+      el("text", { x: cx, y: B + 16, "text-anchor": "middle", class: "mut" }, g).textContent = name;
+      hover(g, `<b>${esc(m)}</b> · ${f}<br>${n} misconceptions hit on ${name} of their questions`);
+    });
+    el("text", { x: W / 2, y: H - 2, "text-anchor": "middle", class: "mut" }, svg).textContent = "share of that misconception's questions hit";
+    card.appendChild(svg); box.appendChild(card);
+  });
+}
+framingToggle("consFraming", drawCons);
+
+// 4. Subject heat table
+function heatColor(v) {
+  const t = Math.min(1, Math.abs(v) / 0.6);
+  const s = getComputedStyle(document.querySelector(".viz-root"));
+  const a = s.getPropertyValue("--neutral").trim(), b = s.getPropertyValue(v >= 0 ? "--s1" : "--neg").trim();
+  const h2r = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const [A, Bc] = [h2r(a), h2r(b)];
+  const c = A.map((x, i) => Math.round(x + (Bc[i] - x) * t));
+  return { bg: `rgb(${c.join(",")})`, ink: t > 0.55 ? "#ffffff" : "var(--text-primary)" };
+}
+let subjFr = "student";
+function drawSubj(f) {
+  subjFr = f;
+  const rows = D.subjects.filter(s => s.framing === f);
+  let html = `<table class="heat"><tr><th>Subject</th>` + D.models.map(m => `<th style="text-align:center">${esc(m)}</th>`).join("") + `</tr>`;
+  D.subject_order.forEach(subj => {
+    const any = rows.find(r => r.subject === subj);
+    html += `<tr><td>${esc(subj)} <span class="muted">(${any ? any.n : ""})</span></td>`;
+    D.models.forEach(m => {
+      const r = rows.find(x => x.subject === subj && x.model === m);
+      if (!r) { html += `<td class="cell">–</td>`; return; }
+      const c = heatColor(r.lift);
+      html += `<td class="cell" style="background:${c.bg};color:${c.ink}" title="${esc(m)} · ${esc(subj)}: matched hit ${pct(r.hit)}, lift ${pts(r.lift)} pts (n=${r.n})">${pts(r.lift)}</td>`;
+    });
+    html += `</tr>`;
+  });
+  document.getElementById("subj").innerHTML = html + `</table>`;
+}
+framingToggle("subjFraming", drawSubj);
+document.querySelectorAll("[data-theme-set]").forEach(b => b.addEventListener("click", () => drawSubj(subjFr)));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawSubj(subjFr));
+
+// 5. Example browser
+// No-persona outcomes carry no color: the hues mean persona outcomes everywhere else on the page.
+const OUT = { h: ["Hit", "var(--s1)"], s: ["Slip", "var(--s2)"], w: ["Other wrong", "var(--s3)"], i: ["Invalid", "var(--none)"], c: ["✓ Correct", null], x: ["✗ Wrong", null] };
+const PAIRS = [];
+Object.entries(D.questions).forEach(([q, Q]) => Object.keys(Q.tags).forEach(t => {
+  if (D.models.some(m => D.answers[m]?.[q]?.[`${t}|student|matched`])) PAIRS.push({ q, t });
+}));
+const cellOf = (m, p, f, c) => D.answers[m]?.[p.q]?.[`${p.t}|${f}|${c}`];
+const FILTERS = [
+  ["all", "All pairs", () => true],
+  ["allhit", "Every model hit (student)", p => D.models.every(m => cellOf(m, p, "student", "matched")?.[1] === "h")],
+  ["allslip", "Every model slipped (student)", p => D.models.every(m => cellOf(m, p, "student", "matched")?.[1] === "s")],
+  ["split", "Models split: some hit, some slip (student)", p => { const o = D.models.map(m => cellOf(m, p, "student", "matched")?.[1]); return o.includes("h") && o.includes("s"); }],
+  ["ctrl", "Control persona picked it anyway (most models)", p => D.models.filter(m => cellOf(m, p, "student", "mismatched")?.[1] === "h").length * 2 > D.models.length],
+  ["fr", "Framing matters: student hits, teacher doesn't (most models)", p => D.models.filter(m => cellOf(m, p, "student", "matched")?.[1] === "h" && cellOf(m, p, "teacher", "matched")?.[1] !== "h").length * 2 > D.models.length],
+];
+const sel = document.getElementById("exFilter");
+let list = PAIRS, idx = 0;
+FILTERS.forEach(([k, name, fn]) => {
+  const n = PAIRS.filter(fn).length;
+  const o = document.createElement("option"); o.value = k; o.textContent = `${name} (${n})`; sel.appendChild(o);
+});
+// Seeded order so "Next" walks a fixed shuffled sequence
+function seededShuffle(a, s = 42) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { s = (s * 1103515245 + 12345) & 0x7fffffff; const j = s % (i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function setFilter() { const fn = FILTERS.find(f => f[0] === sel.value)[2]; list = seededShuffle(PAIRS.filter(fn)); idx = 0; drawExample(); }
+sel.onchange = setFilter;
+document.getElementById("exPrev").onclick = () => { if (list.length) { idx = (idx - 1 + list.length) % list.length; drawExample(); } };
+document.getElementById("exNext").onclick = () => { if (list.length) { idx = (idx + 1) % list.length; drawExample(); } };
+document.getElementById("exRand").onclick = () => { if (list.length) { idx = Math.floor(Math.random() * list.length); drawExample(); } };
+
+function chip(cell, extra) {
+  if (!cell) return `<span class="muted">–</span>`;
+  const [p, o, s, perm, raw] = cell, [name, col] = OUT[o];
+  const rawTxt = raw || `{"answer": "${s}"}`;
+  return `<span class="chip" data-tip="${esc(`Saw options in order ${perm.split("").join(", ")} (original letters).<br>Replied <code>${esc(rawTxt)}</code> → shown ${s || "?"} = original <b>${p || "?"}</b>${extra || ""}`)}">${col ? `<span class="sw" style="background:${col}"></span>` : ""}<b>${p || "?"}</b> ${name}</span>`;
+}
+function drawExample() {
+  const box = document.getElementById("example");
+  document.getElementById("exPos").textContent = list.length ? `${idx + 1} / ${list.length}` : "no matches";
+  if (!list.length) { box.innerHTML = `<p class="muted">No pairs match this filter.</p>`; return; }
+  const p = list[idx], Q = D.questions[p.q];
+  let html = `<div class="muted" style="font-size:13px">Q${p.q} · ${esc(Q.subject)} · ${esc(Q.construct)}</div>
+    <div class="qtext" id="qtext">${esc(Q.text)}</div>`;
+  ["A", "B", "C", "D"].forEach(L => {
+    const badges = [];
+    if (L === Q.correct) badges.push(`<span class="badge correct">✓ correct</span>`);
+    if (L === p.t) badges.push(`<span class="badge target">target distractor</span>`);
+    const mc = Q.tags[L] ? `<div class="mc">${L === p.t ? "<b>Tagged misconception:</b> " : "Tagged: "}${esc(Q.tags[L])}</div>` : "";
+    html += `<div class="opt"><div class="L">${L}</div><div><span class="otext">${esc(Q.options[L])}</span> ${badges.join("")}${mc}</div></div>`;
+  });
+  html += `<div style="margin:16px 0 6px"><div class="persona"><b>Matched persona:</b> ${esc(Q.tags[p.t])}</div>
+    <div class="persona"><b>Control persona:</b> <span class="sub">${esc(D.mismatch[`${p.q}|${p.t}`] || "")}</span></div></div>`;
+  html += `<div style="overflow-x:auto"><table class="ans"><tr><th>Model</th><th>No persona</th><th>Student · matched</th><th>Student · control</th><th>Teacher · matched</th><th>Teacher · control</th></tr>`;
+  D.models.forEach(m => {
+    const a = D.answers[m]?.[p.q] || {};
+    html += `<tr><td><b>${esc(m)}</b></td><td>${chip(a.none)}</td>` +
+      FR.map(f => ["matched", "mismatched"].map(c => `<td>${chip(a[`${p.t}|${f}|${c}`])}</td>`).join("")).join("") + `</tr>`;
+  });
+  html += `</table></div>`;
+  box.innerHTML = html;
+  box.querySelectorAll("[data-tip]").forEach(n => hover(n, n.dataset.tip));
+  if (window.renderMathInElement) renderMathInElement(box, { delimiters: [{ left: "\\[", right: "\\]", display: true }, { left: "\\(", right: "\\)", display: false }, { left: "$$", right: "$$", display: true }], throwOnError: false });
+}
+setFilter();
+window.addEventListener("load", () => drawExample());
+</script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confused on Purpose: can a model stop knowing the answer?</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<!--__STYLE__-->
+<style>
+.sticky { position: sticky; top: 0; z-index: 5; background: var(--page); padding: 8px 0; border-bottom: 1px solid var(--grid); }
+.takeaway { border-left: 3px solid var(--text-primary); padding: 2px 0 2px 14px; margin: 14px 0; }
+.quote { font-size: 16px; color: var(--text-secondary); border-left: 3px solid var(--grid); padding-left: 14px; margin: 12px 0 18px; }
+.lead { font-size: 16px; }
+.tile.hero .value { font-size: 40px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+<div class="theme seg" role="group" aria-label="Theme">
+  <button data-theme-set="light">Light</button><button data-theme-set="dark">Dark</button>
+</div>
+<main>
+  <h1>Can a model stop knowing the answer?</h1>
+  <p class="sub" id="subtitle"></p>
+  <p class="quote">"Can LLMs be confused <i>on purpose</i>, consistently making the specific mistake a given misconception produces, <b>instead of slipping into the correct answer</b> or making a random wrong one?" (the project's original question)</p>
+  <p class="lead">The main report asks <i>how often</i> a model makes the tagged mistake. This page asks what happens the rest of the time.
+  Is the model pulled back to the answer it knows is right? Or does it give up the right answer and land on the <i>wrong</i> mistake?</p>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="sticky controls"><span class="muted">Framing for every chart</span><div class="seg" id="framing"></div>
+    <span class="muted" style="font-size:13px">student = "you are a student who believes…" · teacher = "a student believes…; predict their pick"</span></div>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--s1)"></span>Tagged mistake (hit)</span>
+    <span><span class="sw" style="background:var(--s2)"></span>Correct answer</span>
+    <span><span class="sw" style="background:var(--s3)"></span>Another wrong option</span>
+  </div>
+
+  <h2>1 · A persona does switch off the right answer</h2>
+  <p class="sub">How often each model gives the <b>correct</b> answer: on its own, with an unrelated misconception (control), and with the matching misconception.
+  If models simply "couldn't help being right", the filled dot would stay near the gray one.</p>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--muted)"></span>No persona</span>
+    <span><span class="dot" style="border:2px solid var(--s2)"></span>Control persona (unrelated misconception)</span>
+    <span><span class="dot" style="background:var(--s2)"></span>Matched persona</span>
+  </div>
+  <div class="card"><div id="drop"></div>
+    <details><summary>Show as table</summary><div id="dropTable"></div></details></div>
+  <p class="takeaway" id="t1"></p>
+
+  <h2>2 · When the act fails: the correct answer, or the wrong mistake?</h2>
+  <p class="sub">Matched personas that did <b>not</b> make the tagged mistake. Each such reply picked one of three other options. One of them is correct, so with no pull either way about <b>1 in 3</b> of these misses would be the correct answer (dashed line).
+  A bar well past the line means the right answer is pulling the model back.</p>
+  <div class="card"><div id="truth"></div>
+    <details><summary>Show as table</summary><div id="truthTable"></div></details></div>
+  <p class="takeaway" id="t2"></p>
+
+  <h2>3 · Does knowing the answer help or hurt the act?</h2>
+  <p class="sub">Matched personas, split by whether the same model solves the question with no persona. Hollow dot: questions it gets <i>wrong</i> on its own. Filled dot: questions it gets <i>right</i>.
+  If knowing the answer got in the way, solved questions would show fewer hits and more correct answers.</p>
+  <div class="legend">
+    <span><span class="dot" style="border:2px solid var(--muted)"></span>Questions it can't solve</span>
+    <span><span class="dot" style="background:var(--muted)"></span>Questions it can solve</span>
+  </div>
+  <div class="card"><div id="know"></div>
+    <details><summary>Show as table</summary><div id="knowTable"></div></details></div>
+  <p class="takeaway" id="t3"></p>
+
+  <h2>4 · Staying right when the misconception doesn't apply</h2>
+  <p class="sub">A good act needs two things. When the student's misconception <b>fits</b> the question, make that mistake (up). When it <b>doesn't</b> fit (control), still answer correctly, since the student isn't confused about this topic (right).
+  A model on the left plays "a confused student" as generally wrong rather than wrong in one specific way.</p>
+  <div class="card"><div id="scatter"></div>
+    <details><summary>Show as table</summary><div id="scatterTable"></div></details></div>
+  <p class="takeaway" id="t4"></p>
+
+  <h2>5 · Which mistakes are easy to fake?</h2>
+  <p class="sub">All models and both framings pooled. Left: by how <b>easy the question</b> is (how many of the 5 small models solve it alone). Right: by how <b>tempting the distractor</b> already is: how often <i>control</i> personas picked it.</p>
+  <div class="grid2">
+    <div class="card"><h3>By question ease</h3><div class="muted" style="font-size:12.5px">small models (of 5) that answer correctly with no persona</div><div id="ease"></div></div>
+    <div class="card"><h3>By how tempting the distractor is</h3><div class="muted" style="font-size:12.5px">share of control-persona replies that picked it anyway</div><div id="pull"></div></div>
+  </div>
+  <details><summary>Show as table</summary><div id="binTable"></div></details>
+  <p class="takeaway" id="t5"></p>
+
+  <h2>6 · Do models agree on which mistakes they can make?</h2>
+  <p class="sub">Each pair gets <span class="tries"></span> matched tries (<span class="nmodels"></span> models × 2 framings)<span id="commonNote"></span>. Blue: how many pairs got the tagged mistake <i>k</i> times. Orange: how many got the correct answer <i>k</i> times.</p>
+  <div class="card"><div id="hist"></div>
+    <details><summary>Show as table</summary><div id="histTable"></div></details></div>
+  <p class="takeaway" id="t6"></p>
+
+  <h2>7 · Examples</h2>
+  <p class="sub">Real replies, matched persona unless the column says otherwise. Letters are the original option letters.</p>
+  <div class="controls">
+    <select id="exGroup"></select>
+    <button class="btn" id="exPrev">◀ Prev</button><button class="btn" id="exNext">Next ▶</button>
+    <span class="muted" id="exPos"></span>
+  </div>
+  <div class="card" id="example"></div>
+
+  <h2>What this says about LLMs</h2>
+  <div class="card" id="summary"></div>
+
+  <h2>Caveats</h2>
+  <div class="card"><ul>
+    <li><b>There's no human baseline.</b> Real students who hold a misconception don't make the matching mistake every time either, so 100% isn't the right ceiling.</li>
+    <li><b>Eedi's tags are taken as ground truth.</b> Some "another wrong option" picks may also fit the persona's misconception, so the wrong-mistake share is an upper bound.</li>
+    <li><b>Answers are one letter, with no working shown.</b> A model can't step through the faulty procedure before answering. Letting it "work it wrong" first is the obvious next test.</li>
+    <li>Section 5's distractor temptation comes from the same models' control replies. It describes the data; it isn't an independent measure.</li>
+    <li>Temperature 0 where supported, one reply per condition, Eedi data (CC BY-NC 4.0). <b>This page contains competition data and is for local viewing only.</b></li>
+  </ul></div>
+</main>
+<div id="tip"></div>
+</div>
+
+<script>
+const D = /*__DATA__*/null;
+const FR = ["student", "teacher"];
+const pct = v => (v == null || isNaN(v)) ? "–" : Math.round(v * 100) + "%";
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+const tip = document.getElementById("tip");
+function showTip(ev, html) { tip.innerHTML = html; tip.style.display = "block"; moveTip(ev); }
+function moveTip(ev) { const w = tip.offsetWidth, h = tip.offsetHeight; let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + w > innerWidth - 8) x = ev.clientX - w - 14; if (y + h > innerHeight - 8) y = ev.clientY - h - 14; tip.style.left = x + "px"; tip.style.top = y + "px"; }
+function hover(node, html) { node.addEventListener("pointerenter", e => showTip(e, html)); node.addEventListener("pointermove", moveTip); node.addEventListener("pointerleave", () => tip.style.display = "none"); }
+const label = m => m + (D.reasoning[m] ? " (reasoning)" : "");
+const R = (m, f) => D.per_model.find(r => r.model === m && r.framing === f);
+const rows = f => D.models.map(m => R(m, f)).filter(Boolean);
+const best = (f, key, dir = 1) => [...rows(f)].sort((a, b) => dir * (b[key] - a[key]))[0];
+document.querySelectorAll("[data-theme-set]").forEach(b => b.onclick = () => document.documentElement.setAttribute("data-theme", b.dataset.themeSet));
+document.querySelectorAll(".tries").forEach(n => n.textContent = D.tries);
+document.querySelectorAll(".nmodels").forEach(n => n.textContent = D.models.length);
+const UNEVEN = new Set(Object.values(D.pairs_by_model)).size > 1;
+if (UNEVEN) document.getElementById("commonNote").textContent = `, counting only the ${D.counts.common_pairs} pairs every model answered`;
+
+document.getElementById("subtitle").textContent =
+  `${D.counts.pairs.toLocaleString()} pairs from ${D.counts.questions.toLocaleString()} questions · ${D.models.length} models × 2 framings · ${D.counts.rows.toLocaleString()} replies · stage: ${D.stage}` +
+  (UNEVEN ? ` · ` + Object.entries(D.pairs_by_model).filter(([, n]) => n < D.counts.pairs).map(([m, n]) => `${m} on the first ${n} pairs only`).join(", ") : "");
+
+// Tiles: computed across both framings
+(function tiles() {
+  const all = D.per_model;
+  const drop = [...all].sort((a, b) => (b.acc_none - b.correct_matched) - (a.acc_none - a.correct_matched))[0];
+  const pullMax = [...all].sort((a, b) => b.truth_share - a.truth_share)[0];
+  const top = [...all].sort((a, b) => b.hit_matched - a.hit_matched)[0];
+  document.getElementById("tiles").innerHTML = `
+    <div class="card tile hero"><div class="label">Correct answers, alone → as the matching student</div><div class="value">${pct(drop.acc_none)} → ${pct(drop.correct_matched)}</div>
+      <div class="note">${esc(drop.model)}, ${drop.framing} framing. The persona really does switch the right answer off.</div></div>
+    <div class="card tile"><div class="label">Strongest pull of the right answer</div><div class="value">${pct(pullMax.truth_share)}</div>
+      <div class="note">of ${esc(pullMax.model)}'s misses (${pullMax.framing}) are the correct answer; with no pull it would be 33%</div></div>
+    <div class="card tile"><div class="label">Best model, when it misses the tagged mistake</div><div class="value">${pct(top.other_matched / (1 - top.hit_matched))}</div>
+      <div class="note">of ${esc(top.model)}'s misses (${top.framing}) are a <i>different wrong answer</i>, not the right one</div></div>`;
+})();
+
+// 1. Correct-answer rate: none / control / matched
+function drawDrop(f) {
+  const W = 900, L = 200, Rr = 860, rowH = 34, top = 26;
+  const rs = rows(f), H = top + rs.length * rowH + 6;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Correct-answer rate by condition" });
+  const x = v => L + v * (Rr - L);
+  [0, .25, .5, .75, 1].forEach(v => { el("line", { x1: x(v), x2: x(v), y1: top - 8, y2: H - 4, stroke: "var(--grid)" }, svg);
+    el("text", { x: x(v), y: 14, "text-anchor": "middle", class: "mut" }, svg).textContent = pct(v); });
+  rs.forEach((r, i) => {
+    const cy = top + i * rowH + rowH / 2, g = el("g", {}, svg);
+    el("rect", { x: 0, y: cy - rowH / 2, width: W, height: rowH, fill: "transparent" }, g);
+    el("text", { x: 0, y: cy + 4, class: "ink", "font-weight": 600 }, g).textContent = label(r.model);
+    el("line", { x1: x(r.correct_matched), x2: x(r.acc_none), y1: cy, y2: cy, stroke: "var(--s2)", "stroke-width": 2, "stroke-opacity": .45 }, g);
+    el("circle", { cx: x(r.acc_none), cy, r: 6, fill: "var(--muted)", stroke: "var(--surface-1)", "stroke-width": 2 }, g);
+    el("circle", { cx: x(r.correct_control), cy, r: 5, fill: "var(--surface-1)", stroke: "var(--s2)", "stroke-width": 2 }, g);
+    el("circle", { cx: x(r.correct_matched), cy, r: 6, fill: "var(--s2)", stroke: "var(--surface-1)", "stroke-width": 2 }, g);
+    el("text", { x: x(r.correct_matched) - 10, y: cy + 4, "text-anchor": "end", class: "ink" }, g).textContent = pct(r.correct_matched);
+    hover(g, `<b>${esc(r.model)}</b> · ${f}<br>Correct, no persona: <b>${pct(r.acc_none)}</b><br>Correct, control persona: ${pct(r.correct_control)}<br>Correct, matched persona: <b>${pct(r.correct_matched)}</b><br>Tagged mistake (matched): ${pct(r.hit_matched)}`);
+  });
+  const box = document.getElementById("drop"); box.innerHTML = ""; box.appendChild(svg);
+  document.getElementById("dropTable").innerHTML = `<table><tr><th>Model</th><th class="num">No persona</th><th class="num">Control persona</th><th class="num">Matched persona</th></tr>` +
+    rs.map(r => `<tr><td>${esc(r.model)}</td><td class="num">${pct(r.acc_none)}</td><td class="num">${pct(r.correct_control)}</td><td class="num">${pct(r.correct_matched)}</td></tr>`).join("") + `</table>`;
+  const lo = best(f, "correct_matched", -1), hi = best(f, "correct_matched");
+  document.getElementById("t1").innerHTML = `<b>Models are not stuck being right.</b> With the matching misconception, ${esc(lo.model)} gives the correct answer only ${pct(lo.correct_matched)} of the time, down from ${pct(lo.acc_none)} on its own.
+    The weakest effect is ${esc(hi.model)}, still correct ${pct(hi.correct_matched)} of the time (from ${pct(hi.acc_none)}). That model is the one the right answer keeps pulling back.`;
+}
+
+// 2. Share of misses that are the correct answer, vs 1/3
+function drawTruth(f) {
+  const W = 900, L = 200, Rr = 860, rowH = 34, top = 26, bar = 16;
+  const rs = rows(f), H = top + rs.length * rowH + 6;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Share of misses that are the correct answer" });
+  const x = v => L + v * (Rr - L);
+  [0, .25, .5, .75, 1].forEach(v => { el("line", { x1: x(v), x2: x(v), y1: top - 8, y2: H - 4, stroke: "var(--grid)" }, svg);
+    el("text", { x: x(v), y: 14, "text-anchor": "middle", class: "mut" }, svg).textContent = pct(v); });
+  rs.forEach((r, i) => {
+    const cy = top + i * rowH + rowH / 2, g = el("g", {}, svg), x1 = x(r.truth_share), rr = 4, yt = cy - bar / 2;
+    el("rect", { x: 0, y: cy - rowH / 2, width: W, height: rowH, fill: "transparent" }, g);
+    el("text", { x: 0, y: cy + 4, class: "ink", "font-weight": 600 }, g).textContent = label(r.model);
+    el("path", { d: `M${L},${yt} H${x1 - rr} Q${x1},${yt} ${x1},${yt + rr} V${yt + bar - rr} Q${x1},${yt + bar} ${x1 - rr},${yt + bar} H${L} Z`, fill: "var(--s2)" }, g);
+    el("text", { x: x1 + 8, y: cy + 4, class: "ink", "font-weight": 600 }, g).textContent = pct(r.truth_share);
+    hover(g, `<b>${esc(r.model)}</b> · ${f}<br>${r.misses} matched replies missed the tagged mistake<br><b>${pct(r.truth_share)}</b> of them were the correct answer (no pull: 33%)`);
+  });
+  el("line", { x1: x(1 / 3), x2: x(1 / 3), y1: top - 8, y2: H - 4, stroke: "var(--text-primary)", "stroke-width": 1.5, "stroke-dasharray": "4 4" }, svg);
+  el("text", { x: x(1 / 3) + 4, y: top - 12, class: "ink", "font-size": 11 }, svg).textContent = "no pull (1 in 3)";
+  const box = document.getElementById("truth"); box.innerHTML = ""; box.appendChild(svg);
+  document.getElementById("truthTable").innerHTML = `<table><tr><th>Model</th><th class="num">Misses</th><th class="num">Correct answer</th><th class="num">vs no pull</th></tr>` +
+    rs.map(r => `<tr><td>${esc(r.model)}</td><td class="num">${r.misses}</td><td class="num">${pct(r.truth_share)}</td><td class="num">${(r.truth_share * 3).toFixed(1)}×</td></tr>`).join("") + `</table>`;
+  const grp = (lo, hi) => rs.filter(r => r.truth_share > lo && r.truth_share <= hi).map(r => esc(r.model));
+  const pulled = grp(.5, 1), mild = grp(.4, .5), free = grp(0, .4), list = a => a.join(", ");
+  document.getElementById("t2").innerHTML = `<b>There are two different ways to fail.</b> ` +
+    (pulled.length ? `${list(pulled)}: the right answer pulls hard, and most misses are the correct answer. ` : "") +
+    (mild.length ? `${list(mild)}: a mild pull, a little above the 1-in-3 you'd expect with none. ` : "") +
+    (free.length ? `${list(free)}: no pull. The correct answer comes up about as often as chance; these models have put the right answer aside and landed on a <i>different</i> mistake. ` : "") +
+    `Switch framings: for the stronger models, the teacher framing removes most of the pull.`;
+}
+
+// 3. Solved vs unsolved: hit and correct
+function drawKnow(f) {
+  const W = 900, L = 200, gap = 40, pw = (W - L - gap) / 2, rowH = 34, top = 40;
+  const rs = rows(f), H = top + rs.length * rowH + 6;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Hit and correct rates on solved vs unsolved questions" });
+  const panels = [["hit", "Tagged mistake", "var(--s1)", L], ["slip", "Correct answer", "var(--s2)", L + pw + gap]];
+  panels.forEach(([k, name, col, x0]) => {
+    const x = v => x0 + v * pw / .7;
+    el("text", { x: x0, y: 12, class: "ink", "font-weight": 600 }, svg).textContent = name;
+    [0, .2, .4, .6].forEach(v => { el("line", { x1: x(v), x2: x(v), y1: top - 10, y2: H - 4, stroke: "var(--grid)" }, svg);
+      el("text", { x: x(v), y: 28, "text-anchor": "middle", class: "mut" }, svg).textContent = pct(v); });
+    rs.forEach((r, i) => {
+      const cy = top + i * rowH + rowH / 2, g = el("g", {}, svg), a = r[`unsolved_${k}`], b = r[`solved_${k}`];
+      el("rect", { x: x0, y: cy - rowH / 2, width: pw, height: rowH, fill: "transparent" }, g);
+      el("line", { x1: x(a), x2: x(b), y1: cy, y2: cy, stroke: col, "stroke-width": 2 }, g);
+      el("circle", { cx: x(a), cy, r: 5, fill: "var(--surface-1)", stroke: col, "stroke-width": 2 }, g);
+      el("circle", { cx: x(b), cy, r: 6, fill: col, stroke: "var(--surface-1)", "stroke-width": 2 }, g);
+      const d = Math.round((b - a) * 100);
+      el("text", { x: x(Math.max(a, b)) + 10, y: cy + 4, class: "ink" }, g).textContent = (d >= 0 ? "+" : "−") + Math.abs(d);
+      hover(g, `<b>${esc(r.model)}</b> · ${f} · ${name.toLowerCase()}<br>Questions it can't solve: ${pct(a)} (n=${r.unsolved_n})<br>Questions it can solve: <b>${pct(b)}</b> (n=${r.solved_n})`);
+    });
+  });
+  rs.forEach((r, i) => el("text", { x: 0, y: top + i * rowH + rowH / 2 + 4, class: "ink", "font-weight": 600 }, svg).textContent = label(r.model));
+  const box = document.getElementById("know"); box.innerHTML = ""; box.appendChild(svg);
+  document.getElementById("knowTable").innerHTML = `<table><tr><th>Model</th><th class="num">Mistake, can't solve</th><th class="num">Mistake, can solve</th><th class="num">Correct, can't solve</th><th class="num">Correct, can solve</th></tr>` +
+    rs.map(r => `<tr><td>${esc(r.model)}</td><td class="num">${pct(r.unsolved_hit)} <span class="muted">(${r.unsolved_n})</span></td><td class="num">${pct(r.solved_hit)} <span class="muted">(${r.solved_n})</span></td><td class="num">${pct(r.unsolved_slip)}</td><td class="num">${pct(r.solved_slip)}</td></tr>`).join("") + `</table>`;
+  const helps = rs.filter(r => r.solved_hit > r.unsolved_hit + .03).map(r => r.model), hurts = rs.filter(r => r.solved_slip > r.unsolved_slip + .1).map(r => r.model);
+  document.getElementById("t3").innerHTML = `<b>For some models, knowing the answer helps them make the mistake.</b> ${helps.length ? `${helps.map(esc).join(", ")} make the tagged mistake <i>more</i> often on questions they can solve: you have to understand a question to get it wrong in one specific way. ` : ""}
+    ${hurts.length ? `For ${hurts.map(esc).join(" and ")}, knowing the answer leaks: on questions they can solve, the correct answer comes back far more often.` : ""}`;
+}
+
+// 4. Scatter: correct under control (x) vs hit under matched (y)
+const SHORT = m => m.replace("claude-", "").replace("gemini-", "").replace("-flash-lite", " flash-lite").replace("gpt-", "gpt-");
+function drawScatter(f) {
+  const W = 900, H = 420, L = 60, Rr = 870, T = 20, B = 370;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Stays right under control vs makes the tagged mistake under matched" });
+  const x = v => L + (v - .2) / .8 * (Rr - L), y = v => B - v / .7 * (B - T);
+  [.2, .4, .6, .8, 1].forEach(v => { el("line", { x1: x(v), x2: x(v), y1: T, y2: B, stroke: "var(--grid)" }, svg);
+    el("text", { x: x(v), y: B + 18, "text-anchor": "middle", class: "mut" }, svg).textContent = pct(v); });
+  [0, .2, .4, .6].forEach(v => { el("line", { x1: L, x2: Rr, y1: y(v), y2: y(v), stroke: "var(--grid)" }, svg);
+    el("text", { x: L - 8, y: y(v) + 4, "text-anchor": "end", class: "mut" }, svg).textContent = pct(v); });
+  el("text", { x: (L + Rr) / 2, y: H - 6, "text-anchor": "middle", class: "ink" }, svg).textContent = "Control persona: answers correctly when the misconception doesn't apply →";
+  el("text", { x: 14, y: (T + B) / 2, "text-anchor": "middle", class: "ink", transform: `rotate(-90 14 ${(T + B) / 2})` }, svg).textContent = "Matched persona: makes the tagged mistake →";
+  el("text", { x: Rr - 6, y: T + 16, "text-anchor": "end", class: "mut" }, svg).textContent = "ideal: specific mistake, otherwise right";
+  el("text", { x: L + 8, y: T + 16, class: "mut" }, svg).textContent = "plays 'confused' as generally wrong";
+  const rs = rows(f);
+  rs.forEach(r => {
+    const g = el("g", {}, svg), cx = x(r.correct_control), cy = y(r.hit_matched);
+    el("circle", { cx, cy, r: 16, fill: "transparent" }, g);
+    el("circle", { cx, cy, r: 7, fill: "var(--s1)", stroke: "var(--surface-1)", "stroke-width": 2 }, g);
+    el("text", { x: cx + 12, y: cy + 4, class: "ink" }, g).textContent = SHORT(r.model);
+    hover(g, `<b>${esc(r.model)}</b> · ${f}<br>Matched: tagged mistake <b>${pct(r.hit_matched)}</b><br>Control: correct <b>${pct(r.correct_control)}</b> (alone: ${pct(r.acc_none)})`);
+  });
+  const box = document.getElementById("scatter"); box.innerHTML = ""; box.appendChild(svg);
+  document.getElementById("scatterTable").innerHTML = `<table><tr><th>Model</th><th class="num">Matched: tagged mistake</th><th class="num">Control: correct</th><th class="num">Alone: correct</th></tr>` +
+    rs.map(r => `<tr><td>${esc(r.model)}</td><td class="num">${pct(r.hit_matched)}</td><td class="num">${pct(r.correct_control)}</td><td class="num">${pct(r.acc_none)}</td></tr>`).join("") + `</table>`;
+  const over = rs.filter(r => r.acc_none - r.correct_control > .25);
+  document.getElementById("t4").innerHTML = over.length
+    ? `<b>Some models overdo it.</b> ${over.map(r => `${esc(r.model)} drops from ${pct(r.acc_none)} to ${pct(r.correct_control)} correct`).join("; ")} when the student's misconception has nothing to do with the question.
+       Some of what looks like "pretending well" is pretending to be generally bad at maths. The opposite failure from "can't stop being right" is "can't stay right".`
+    : `<b>In this framing no model overdoes it much:</b> with an unrelated misconception, every model stays close to its own accuracy. ${esc(best(f, "correct_control").model)} is the most selective.`;
+}
+
+// 5. Line charts for pooled bins (same for both framings)
+function lineChart(id, bins, xlabel) {
+  const W = 420, H = 230, L = 40, Rr = 400, T = 16, B = 190;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": xlabel });
+  const n = bins.length, x = i => L + (i + .5) * (Rr - L) / n, y = v => B - v / .6 * (B - T);
+  [0, .2, .4, .6].forEach(v => { el("line", { x1: L, x2: Rr, y1: y(v), y2: y(v), stroke: "var(--grid)" }, svg);
+    el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end", class: "mut" }, svg).textContent = pct(v); });
+  [["hit", "var(--s1)", "Tagged mistake"], ["slip", "var(--s2)", "Correct answer"]].forEach(([k, col, name]) => {
+    el("polyline", { points: bins.map((b, i) => `${x(i)},${y(b[k])}`).join(" "), fill: "none", stroke: col, "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+    bins.forEach((b, i) => { const g = el("g", {}, svg);
+      el("circle", { cx: x(i), cy: y(b[k]), r: 12, fill: "transparent" }, g);
+      el("circle", { cx: x(i), cy: y(b[k]), r: 4.5, fill: col, stroke: "var(--surface-1)", "stroke-width": 2 }, g);
+      hover(g, `${esc(xlabel)}: <b>${esc(b.bin)}</b><br>${name}: <b>${pct(b[k])}</b><br>${b.n.toLocaleString()} matched replies`); });
+    const last = bins[n - 1];
+    el("text", { x: x(n - 1) + 8, y: y(last[k]) + 4, class: "ink", "font-size": 11 }, svg).textContent = pct(last[k]);
+  });
+  bins.forEach((b, i) => el("text", { x: x(i), y: B + 18, "text-anchor": "middle", class: "mut" }, svg).textContent = b.bin);
+  document.getElementById(id).appendChild(svg);
+}
+lineChart("ease", D.ease, "Models that solve it alone");
+lineChart("pull", D.pull, "Control personas picking it");
+document.getElementById("binTable").innerHTML = `<div class="grid2"><table><tr><th>Solved by</th><th class="num">Replies</th><th class="num">Mistake</th><th class="num">Correct</th></tr>` +
+  D.ease.map(b => `<tr><td>${b.bin} of 5</td><td class="num">${b.n}</td><td class="num">${pct(b.hit)}</td><td class="num">${pct(b.slip)}</td></tr>`).join("") + `</table>` +
+  `<table><tr><th>Control picked it</th><th class="num">Pairs</th><th class="num">Mistake</th><th class="num">Correct</th></tr>` +
+  D.pull.map(b => `<tr><td>${b.bin}</td><td class="num">${b.pairs}</td><td class="num">${pct(b.hit)}</td><td class="num">${pct(b.slip)}</td></tr>`).join("") + `</table></div>`;
+(function () {
+  const e0 = D.ease[0], e5 = D.ease[D.ease.length - 1], p0 = D.pull[0], p3 = D.pull[D.pull.length - 1];
+  document.getElementById("t5").innerHTML = `<b>Models fake natural mistakes far more easily than unnatural ones.</b> When a distractor is one that even unrelated personas fall for, the tagged mistake comes up ${pct(p3.hit)} of the time.
+    When no control persona ever picked it (${p0.pairs.toLocaleString()} pairs), it comes up ${pct(p0.hit)} of the time, and the correct answer wins ${pct(p0.slip)}.
+    Question ease matters less for the mistake, but the correct answer leaks more on easy questions: ${pct(e0.slip)} when no model solves it, ${pct(e5.slip)} when all five small models do.`;
+})();
+
+// 6. Histogram of hits / slips per pair
+(function hist() {
+  const W = 900, H = 240, L = 50, Rr = 880, T = 16, B = 200, hs = D.hist;
+  const mx = Math.max(...hs.map(h => Math.max(h.hits, h.slips)));
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Per-pair agreement histogram" });
+  const slot = (Rr - L) / hs.length, bw = Math.min(22, slot / 2 - 4), y = v => B - v / mx * (B - T);
+  const step = mx > 400 ? 100 : 50;
+  for (let v = 0; v <= mx; v += step) { el("line", { x1: L, x2: Rr, y1: y(v), y2: y(v), stroke: "var(--grid)" }, svg);
+    el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end", class: "mut" }, svg).textContent = v; }
+  hs.forEach((h, i) => {
+    const cx = L + slot * i + slot / 2;
+    [["hits", "var(--s1)", -1, "made the tagged mistake"], ["slips", "var(--s2)", 1, "gave the correct answer"]].forEach(([k, col, side, name]) => {
+      const x0 = side < 0 ? cx - bw - 1 : cx + 1, v = h[k], yt = y(v), r = Math.min(4, B - yt), g = el("g", {}, svg);
+      el("rect", { x: x0 - 2, y: T, width: bw + 4, height: B - T, fill: "transparent" }, g);
+      if (v > 0) el("path", { d: `M${x0},${B} V${yt + r} Q${x0},${yt} ${x0 + r},${yt} H${x0 + bw - r} Q${x0 + bw},${yt} ${x0 + bw},${yt + r} V${B} Z`, fill: col }, g);
+      hover(g, `<b>${v}</b> pairs where exactly <b>${h.k}</b> of ${D.tries} tries ${name}`);
+    });
+    el("text", { x: cx, y: B + 18, "text-anchor": "middle", class: "mut" }, svg).textContent = h.k;
+  });
+  el("text", { x: (L + Rr) / 2, y: H - 2, "text-anchor": "middle", class: "mut" }, svg).textContent = `number of tries (out of ${D.tries}) with that outcome`;
+  document.getElementById("hist").appendChild(svg);
+  document.getElementById("histTable").innerHTML = `<table><tr><th>k of ${D.tries}</th><th class="num">Pairs with k tagged mistakes</th><th class="num">Pairs with k correct answers</th></tr>` +
+    hs.map(h => `<tr><td>${h.k}</td><td class="num">${h.hits}</td><td class="num">${h.slips}</td></tr>`).join("") + `</table>`;
+  const z = hs[0], f = hs[hs.length - 1];
+  document.getElementById("t6").innerHTML = `<b>Some mistakes no model can make, and a few answers no model can let go of.</b> ${z.hits.toLocaleString()} pairs (${pct(z.hits / D.counts.common_pairs)}) never got the tagged mistake from any model in either framing.
+    ${f.hits} pairs got it every time. ${f.slips} pairs got the correct answer from all ${D.tries} tries: there the truth always wins. See them in the examples below.`;
+})();
+
+// 7. Examples
+const OUT = { h: ["Mistake", "var(--s1)"], s: ["Correct", "var(--s2)"], w: ["Other wrong", "var(--s3)"], i: ["Invalid", "var(--none)"], c: ["✓", null], x: ["✗", null] };
+const GKEYS = Object.keys(D.examples);
+const gsel = document.getElementById("exGroup");
+GKEYS.forEach(k => { const o = document.createElement("option"); o.value = k; o.textContent = `${D.examples[k].title} (${D.examples[k].count} pairs; showing ${D.examples[k].pairs.length})`; gsel.appendChild(o); });
+let exList = [], exIdx = 0;
+function setGroup() { exList = D.examples[gsel.value].pairs; exIdx = 0; drawExample(); }
+gsel.onchange = setGroup;
+document.getElementById("exPrev").onclick = () => { if (exList.length) { exIdx = (exIdx - 1 + exList.length) % exList.length; drawExample(); } };
+document.getElementById("exNext").onclick = () => { if (exList.length) { exIdx = (exIdx + 1) % exList.length; drawExample(); } };
+function chip(c) { if (!c) return `<span class="muted">–</span>`; const [n, col] = OUT[c[1]];
+  return `<span class="chip">${col ? `<span class="sw" style="background:${col}"></span>` : ""}<b>${c[0] || "?"}</b> ${n}</span>`; }
+function drawExample() {
+  const box = document.getElementById("example");
+  document.getElementById("exPos").textContent = exList.length ? `${exIdx + 1} / ${exList.length}` : "none";
+  if (!exList.length) { box.innerHTML = `<p class="muted">No pairs show this pattern.</p>`; return; }
+  const [q, t] = exList[exIdx], Q = D.questions[q];
+  let html = `<div class="muted" style="font-size:13px">Q${q} · ${esc(Q.subject)} · ${esc(Q.construct)}</div><div class="qtext">${esc(Q.text)}</div>`;
+  ["A", "B", "C", "D"].forEach(L => {
+    const b = []; if (L === Q.correct) b.push(`<span class="badge correct">✓ correct</span>`); if (L === t) b.push(`<span class="badge target">tagged mistake</span>`);
+    const mc = Q.tags[L] ? `<div class="mc">${L === t ? "<b>Persona's misconception:</b> " : "Tagged: "}${esc(Q.tags[L])}</div>` : "";
+    html += `<div class="opt"><div class="L">${L}</div><div>${esc(Q.options[L])} ${b.join("")}${mc}</div></div>`;
+  });
+  html += `<div class="persona" style="margin-top:12px"><b>Control persona:</b> <span class="sub">${esc(D.mismatch[`${q}|${t}`] || "")}</span></div>`;
+  html += `<div style="overflow-x:auto"><table class="ans"><tr><th>Model</th><th>Alone</th><th>Student · matched</th><th>Teacher · matched</th><th>Student · control</th><th>Teacher · control</th></tr>`;
+  D.models.forEach(m => { const a = D.answers[m]?.[q] || {};
+    html += `<tr><td><b>${esc(m)}</b></td><td>${chip(a.none)}</td>` + ["student|matched", "teacher|matched", "student|mismatched", "teacher|mismatched"].map(k => `<td>${chip(a[`${t}|${k}`])}</td>`).join("") + `</tr>`; });
+  box.innerHTML = html + `</table></div>`;
+  if (window.renderMathInElement) renderMathInElement(box, { delimiters: [{ left: "\\[", right: "\\]", display: true }, { left: "\\(", right: "\\)", display: false }, { left: "$$", right: "$$", display: true }], throwOnError: false });
+}
+gsel.value = GKEYS.find(k => D.examples[k].pairs.length) || GKEYS[0];
+setGroup();
+window.addEventListener("load", () => drawExample());
+
+// Summary: both framings
+(function summary() {
+  const all = D.per_model, avg = k => all.reduce((s, r) => s + r[k], 0) / all.length;
+  const top = [...all].sort((a, b) => b.hit_matched - a.hit_matched)[0];
+  const pulled = [...new Set(all.filter(r => r.truth_share > .5).map(r => r.model))];
+  const over = all.filter(r => r.acc_none - r.correct_control > .25);
+  document.getElementById("summary").innerHTML = `<ol>
+    <li><b>Telling a model to hold a misconception does switch off the right answer.</b> Averaged over models and framings, correct answers fall from ${pct(avg("acc_none"))} alone to ${pct(avg("correct_matched"))} with the matching persona.
+      "Models can't stop being right" is too strong.</li>
+    <li><b>Switching off the right answer isn't the same as producing the right mistake.</b> Even the best result (${esc(top.model)}, ${top.framing}) makes the tagged mistake only ${pct(top.hit_matched)} of the time.
+      Most of its misses are a <i>different</i> wrong answer, not the correct one.</li>
+    <li><b>The right answer pulls back hardest on weaker models</b> (${pulled.map(esc).join(", ") || "none"}). Stronger models know the answer well enough to put it aside, then can't reliably get the specific mistake.
+      For them the limit is following the faulty rule, not letting go of the truth.</li>
+    <li><b>Some models overdo it.</b> ${over.length ? over.map(r => `${esc(r.model)} (${r.framing})`).join(", ") + " get much worse even with an unrelated misconception." : "No model gets much worse with an unrelated misconception."}
+      "Act confused" can turn into "act generally bad at maths". Checking a control persona is essential for any study like this.</li>
+    <li><b>Models reproduce common mistakes, not arbitrary rules.</b> Distractors that tempt even unrelated personas are easy to fake. Idiosyncratic ones mostly aren't.
+      A model's "confusion" looks like its own sense of a typical mistake more than a simulation of the stated belief.</li>
+  </ol>`;
+})();
+
+// Framing toggle drives sections 1–4
+(function () {
+  const box = document.getElementById("framing");
+  const draw = f => { drawDrop(f); drawTruth(f); drawKnow(f); drawScatter(f); };
+  FR.forEach(f => { const b = document.createElement("button"); b.textContent = f; b.setAttribute("aria-pressed", f === "student");
+    b.onclick = () => { box.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); draw(f); }; box.appendChild(b); });
+  draw("student");
+})();
+</script>
+</body>
+</html>

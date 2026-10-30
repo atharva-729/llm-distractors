@@ -1,0 +1,5 @@
+model,mode,framing,matched_hit_rate,matched_slip_rate,matched_wrong_stupid_rate,matched_invalid_rate,matched_n,mismatched_hit_rate,mismatched_slip_rate,mismatched_invalid_rate,lift,no_persona_accuracy,no_persona_invalid
+gpt-4o-mini,batched,student,0.34,0.4,0.26,0.0,50,0.1,0.6,0.0,0.24000000000000002,0.76,0.0
+gpt-4o-mini,batched,teacher,0.2,0.48,0.32,0.0,50,0.18,0.54,0.0,0.020000000000000018,0.76,0.0
+gpt-4o-mini,single,student,0.3,0.54,0.16,0.0,50,0.06,0.72,0.0,0.24,0.66,0.0
+gpt-4o-mini,single,teacher,0.3,0.44,0.26,0.0,50,0.14,0.62,0.0,0.15999999999999998,0.66,0.0
