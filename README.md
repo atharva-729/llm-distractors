@@ -201,3 +201,8 @@ Show the page running locally. Atharva reviews copy and charts before it's publi
 - Personalised distractors per student
 - Validating personas against real student response rates
 - Live "paste your question" tool with a backend
+---
+
+## License
+
+Code: [MIT](LICENSE). The competition data keeps its own terms (non-commercial, no redistribution); see [LICENSE_NOTES.md](LICENSE_NOTES.md).
